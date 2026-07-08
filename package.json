@@ -23,5 +23,9 @@
     "@types/express": "^4.17.0",
     "@types/js-yaml": "^4.0.0",
     "@types/node": "^20.0.0"
+  },
+  "overrides": {
+    "express-serve-static-core": "4.19.8",
+    "@types/express-serve-static-core": "4.19.8"
   }
 }
