@@ -1,0 +1,15 @@
+project: MY_PROJECT
+repo: my-repository
+target: main
+branches:
+  - feature/login
+  - feature/dashboard
+  - bugfix/fix-header
+pr:
+  title_prefix: "Merge"
+  description: "Автоматический merge request"
+webhook:
+  url: https://myserver.com/webhook/bitbucket
+  events:
+    - pr:merged
+    - pr:updated
