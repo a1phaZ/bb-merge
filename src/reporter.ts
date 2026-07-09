@@ -3,6 +3,12 @@ import * as path from 'path';
 import { Report, MergeResult } from './types';
 
 const LOG_DIR = path.join(process.cwd(), 'logs');
+const BITBUCKET_URL = process.env.BITBUCKET_URL || '';
+
+function getPRUrl(repo: string, prId: number): string {
+  const [project, repoSlug] = repo.split('/');
+  return `${BITBUCKET_URL}/projects/${project}/repos/${repoSlug}/pull-requests/${prId}`;
+}
 
 function writeErrorLog(errors: MergeResult[], timestamp: string): string {
   if (!fs.existsSync(LOG_DIR)) {
@@ -52,11 +58,8 @@ export function generateReport(report: Report): string {
     lines.push(`│ ${report.autoMerge ? 'Требует внимания (конфликты)' : 'Требует мержа'}`);
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of conflicts) {
-      if (report.autoMerge) {
-        lines.push(`│ ⚠ ${r.branch} → PR #${r.prId}`);
-      } else {
-        lines.push(`│ ⚠ ${r.branch} → PR #${r.prId}`);
-      }
+      const prUrl = getPRUrl(report.repo, r.prId!);
+      lines.push(`│ ⚠ ${r.branch} → ${prUrl}`);
       if (r.reviewer) {
         lines.push(`│   Ревьювер: ${r.reviewer.name}`);
       }
