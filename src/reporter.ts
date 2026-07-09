@@ -44,10 +44,11 @@ export function generateReport(report: Report): string {
 
   if (merged.length > 0) {
     lines.push('┌─────────────────────────────────────────────────────┐');
-    lines.push('│ Автоматически смержено                              │');
+    lines.push('│ Успешно смержено                                    │');
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of merged) {
-      lines.push(`│ ✓ ${r.branch}`);
+      lines.push(`│ ✓ ${r.branch} → ${report.target}`);
+      lines.push(`│   PR: #${r.prId} | Мерж: Автоматический ✓`);
     }
     lines.push('└─────────────────────────────────────────────────────┘');
     lines.push('');
