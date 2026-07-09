@@ -30,11 +30,15 @@ export function generateReport(report: Report): string {
 
   if (conflicts.length > 0) {
     lines.push('┌─────────────────────────────────────────────────────┐');
-    lines.push('│ Требует внимания (конфликты)                        │');
+    lines.push(`│ ${report.autoMerge ? 'Требует внимания (конфликты)' : 'Требует мержа'}`);
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of conflicts) {
       lines.push(`│ ⚠ ${r.branch} → ${report.target}`);
-      lines.push(`│   PR: #${r.prId} | Конфликты: ДА`);
+      if (report.autoMerge) {
+        lines.push(`│   PR: #${r.prId} | Конфликты: ДА`);
+      } else {
+        lines.push(`│   PR: #${r.prId} | Мерж: Отключен`);
+      }
       if (r.reviewer) {
         lines.push(`│   Ревьювер: ${r.reviewer.name} (последний коммитер)`);
       }
