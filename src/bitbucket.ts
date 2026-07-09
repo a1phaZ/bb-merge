@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import https from 'https';
 import {
   BitbucketPRResponse,
   BitbucketMergeStatus,
@@ -26,7 +27,8 @@ export class BitbucketClient {
     this.client = axios.create({
       baseURL,
       auth: { username, password },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
     });
   }
 
