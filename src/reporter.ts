@@ -1,4 +1,24 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { Report, MergeResult } from './types';
+
+const LOG_DIR = path.join(process.cwd(), 'logs');
+
+function writeErrorLog(errors: MergeResult[], timestamp: string): string {
+  if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+  }
+
+  const filename = `errors-${timestamp.replace(/[:.]/g, '-')}.log`;
+  const filepath = path.join(LOG_DIR, filename);
+
+  const lines = errors.map(r => {
+    return `[${timestamp}] ${r.branch}: ${r.error}`;
+  });
+
+  fs.writeFileSync(filepath, lines.join('\n'), 'utf8');
+  return filepath;
+}
 
 export function generateReport(report: Report): string {
   const lines: string[] = [];
@@ -18,11 +38,10 @@ export function generateReport(report: Report): string {
 
   if (merged.length > 0) {
     lines.push('┌─────────────────────────────────────────────────────┐');
-    lines.push('│ Успешно смержено                                    │');
+    lines.push('│ Автоматически смержено                              │');
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of merged) {
-      lines.push(`│ ✓ ${r.branch} → ${report.target}`);
-      lines.push(`│   PR: #${r.prId} | Мерж: Автоматический ✓`);
+      lines.push(`│ ✓ ${r.branch}`);
     }
     lines.push('└─────────────────────────────────────────────────────┘');
     lines.push('');
@@ -33,14 +52,13 @@ export function generateReport(report: Report): string {
     lines.push(`│ ${report.autoMerge ? 'Требует внимания (конфликты)' : 'Требует мержа'}`);
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of conflicts) {
-      lines.push(`│ ⚠ ${r.branch} → ${report.target}`);
       if (report.autoMerge) {
-        lines.push(`│   PR: #${r.prId} | Конфликты: ДА`);
+        lines.push(`│ ⚠ ${r.branch} → PR #${r.prId}`);
       } else {
-        lines.push(`│   PR: #${r.prId} | Мерж: Отключен`);
+        lines.push(`│ ⚠ ${r.branch} → PR #${r.prId}`);
       }
       if (r.reviewer) {
-        lines.push(`│   Ревьювер: ${r.reviewer.name} (последний коммитер)`);
+        lines.push(`│   Ревьювер: ${r.reviewer.name}`);
       }
     }
     lines.push('└─────────────────────────────────────────────────────┘');
@@ -52,22 +70,23 @@ export function generateReport(report: Report): string {
     lines.push('│ Пропущено                                          │');
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of skipped) {
-      lines.push(`│ ✗ ${r.branch} → ${report.target}`);
-      lines.push(`│   Причина: ${r.error || 'Ветка не найдена'}`);
+      lines.push(`│ ✗ ${r.branch}`);
     }
     lines.push('└─────────────────────────────────────────────────────┘');
     lines.push('');
   }
 
   if (errors.length > 0) {
+    const logFile = writeErrorLog(errors, report.timestamp);
     lines.push('┌─────────────────────────────────────────────────────┐');
-    lines.push('│ Ошибки                                             │');
+    lines.push('│ Ошибки (см. лог-файл)                              │');
     lines.push('├─────────────────────────────────────────────────────┤');
     for (const r of errors) {
-      lines.push(`│ ✗ ${r.branch} → ${report.target}`);
-      lines.push(`│   Ошибка: ${r.error}`);
+      lines.push(`│ ✗ ${r.branch}`);
     }
     lines.push('└─────────────────────────────────────────────────────┘');
+    lines.push('');
+    lines.push(`Лог-файл: ${logFile}`);
     lines.push('');
   }
 
@@ -79,7 +98,7 @@ export function generateReport(report: Report): string {
   lines.push('Итого:');
   lines.push(`  Создано PR: ${merged.length + conflicts.length}`);
   lines.push(`  Автоматически смержено: ${merged.length}`);
-  lines.push(`  С конфликтами: ${conflicts.length}`);
+  lines.push(`  Требует мержа: ${conflicts.length}`);
   lines.push(`  Пропущено: ${skipped.length}`);
   lines.push(`  Ошибок: ${errors.length}`);
   lines.push('');
