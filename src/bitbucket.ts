@@ -34,12 +34,7 @@ export class BitbucketClient {
     try {
       const response = await this.client.get(
         `/rest/api/1.0/projects/${this.project}/repos/${this.repo}/branches`,
-        { 
-          params: { 
-            filterText: branch,
-            limit: 1000
-          } 
-        }
+        { params: { filter: branch } }
       );
 
       const branches = response.data.values || [];
