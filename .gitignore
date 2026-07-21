@@ -4,7 +4,7 @@ dist/
 .env
 *.log
 .DS_Store
-data/
-data-test/
-logs/
+/data/
+/data-test/
+/logs/
 public/browser/
