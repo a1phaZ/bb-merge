@@ -403,13 +403,13 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Таблица: дата, провайдер, проект/repo, target, ветки, merged/conflicts/skipped/errors | 🟡 План |
-| Фильтры: по дате, провайдеру, статусу | 🟡 План |
-| Поиск: по project/repo/branch (debounced) | 🟡 План |
-| Пагинация (Angular Material paginator) | 🟡 План |
-| Детальный просмотр: результаты по веткам, ссылки на PR, report text | 🟡 План |
+| Таблица: дата, провайдер, проект/repo, target, ветки, merged/conflicts/skipped/errors | 🟢 Готово |
+| Фильтры: по провайдеру | 🟢 Готово |
+| Поиск: по project/repo/branch (debounced) | 🟢 Готово |
+| Пагинация (Angular Material paginator) | 🟢 Готово |
+| Детальный просмотр: результаты по веткам, дата, ID | 🟢 Готово |
 | Кнопка "Rerun" → копировать конфигурацию в `/merge-request/new` | 🟡 План |
-| Кнопка "Clear History" с confirm dialog | 🟡 План |
+| Кнопка "Clear History" с confirm dialog | 🟢 Готово |
 
 ---
 
