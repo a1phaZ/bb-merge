@@ -19,6 +19,7 @@ v1Router.use('/templates', templatesRouter);
 v1Router.use('/logs', logsRouter);
 v1Router.use('/settings', settingsRouter);
 v1Router.use('/progress', progressRouter);
+v1Router.use('/webhooks', webhooksRouter);
 
 const apiRouter = Router();
 
