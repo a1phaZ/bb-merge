@@ -19,6 +19,17 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   res.json(result);
 }));
 
+router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
+  const storage = await getStorageProvider();
+  const days = req.query.days ? parseInt(req.query.days as string) : 30;
+  if (isNaN(days) || days < 1 || days > 365) {
+    res.status(400).json({ error: 'days must be between 1 and 365' });
+    return;
+  }
+  const stats = await storage.getHistoryStats(days);
+  res.json(stats);
+}));
+
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const item = await storage.getHistoryItem(req.params.id);

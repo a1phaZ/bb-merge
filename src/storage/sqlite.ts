@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { ProviderConfig } from '../providers/interfaces';
-import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult } from './interfaces';
+import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
 import { cryptoService } from './crypto';
 import { config } from '../config';
 
@@ -248,6 +248,29 @@ export class SQLiteStorageProvider implements StorageProvider {
         record.autoMerge ? 1 : 0, record.strategy, record.resultsJson, record.totalBranches,
         record.mergedCount, record.conflictsCount, record.skippedCount, record.errorsCount, record.createdAt);
     }
+  }
+
+  async getHistoryStats(days: number = 30): Promise<StatsEntry[]> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const rows = this.db.prepare(`
+      SELECT DATE(created_at) as date,
+             COUNT(*) as total,
+             SUM(merged_count) as merged,
+             SUM(conflicts_count) as conflicts,
+             SUM(errors_count) as errors
+      FROM history
+      WHERE created_at >= ?
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).all(cutoff.toISOString()) as any[];
+    return rows.map(r => ({
+      date: r.date,
+      total: r.total,
+      merged: r.merged,
+      conflicts: r.conflicts,
+      errors: r.errors,
+    }));
   }
 
   async deleteHistory(): Promise<void> {

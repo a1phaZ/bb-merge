@@ -81,6 +81,10 @@ export class ApiService {
     return this.http.get<HistoryRecord>(`/api/v1/history/${id}`);
   }
 
+  getHistoryStats(days: number = 30) {
+    return this.http.get<Array<{ date: string; total: number; merged: number; conflicts: number; errors: number }>>(`/api/v1/history/stats?days=${days}`);
+  }
+
   deleteHistory() {
     return this.http.delete<void>('/api/v1/history').pipe(
       tap(() => this.invalidate('history')),

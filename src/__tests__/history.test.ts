@@ -7,6 +7,10 @@ import { errorHandler } from '../middleware/error-handler';
 const mockStorage = vi.hoisted(() => ({
   getHistory: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, limit: 50 }),
   getHistoryItem: vi.fn().mockResolvedValue(null),
+  getHistoryStats: vi.fn().mockResolvedValue([
+    { date: '2026-07-01', total: 5, merged: 3, conflicts: 1, errors: 1 },
+    { date: '2026-07-02', total: 8, merged: 6, conflicts: 1, errors: 1 },
+  ]),
   deleteHistory: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -43,6 +47,36 @@ describe('History API', () => {
     const res = await request(app).get('/api/v1/history/abc123');
     expect(res.status).toBe(200);
     expect(res.body.project).toBe('PROJ');
+  });
+
+  it('returns stats for default days', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/v1/history/stats');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0]).toHaveProperty('date');
+    expect(res.body[0]).toHaveProperty('total');
+  });
+
+  it('returns stats for custom days', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/v1/history/stats?days=7');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+  });
+
+  it('returns 400 for invalid days value', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/v1/history/stats?days=abc');
+    expect(res.status).toBe(400);
+  });
+
+  it('returns stats which calls getHistoryStats on storage', async () => {
+    mockStorage.getHistoryStats.mockClear();
+    const app = createApp();
+    await request(app).get('/api/v1/history/stats?days=14');
+    expect(mockStorage.getHistoryStats).toHaveBeenCalledWith(14);
   });
 
   it('deletes all history', async () => {

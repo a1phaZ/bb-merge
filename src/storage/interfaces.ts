@@ -56,6 +56,14 @@ export interface PaginatedResult<T> {
   limit: number;
 }
 
+export interface StatsEntry {
+  date: string;
+  total: number;
+  merged: number;
+  conflicts: number;
+  errors: number;
+}
+
 export interface StorageProvider {
   getProviders(): Promise<ProviderConfig[]>;
   getProvider(id: string): Promise<ProviderConfig | null>;
@@ -64,6 +72,7 @@ export interface StorageProvider {
 
   getHistory(filter?: HistoryFilter): Promise<PaginatedResult<HistoryRecord>>;
   getHistoryItem(id: string): Promise<HistoryRecord | null>;
+  getHistoryStats(days?: number): Promise<StatsEntry[]>;
   saveHistory(record: HistoryRecord): Promise<void>;
   deleteHistory(): Promise<void>;
 

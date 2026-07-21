@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ProviderConfig } from '../providers/interfaces';
-import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult } from './interfaces';
+import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
 import { cryptoService } from './crypto';
 import { config } from '../config';
 
@@ -126,6 +126,30 @@ export class FileStorageProvider implements StorageProvider {
       all.push(record);
     }
     writeJSON('history', all);
+  }
+
+  async getHistoryStats(days: number = 30): Promise<StatsEntry[]> {
+    const all = readJSON<HistoryRecord>('history');
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const map = new Map<string, StatsEntry>();
+
+    for (const record of all) {
+      const d = new Date(record.createdAt);
+      if (d < cutoff) continue;
+      const key = d.toISOString().slice(0, 10);
+      let entry = map.get(key);
+      if (!entry) {
+        entry = { date: key, total: 0, merged: 0, conflicts: 0, errors: 0 };
+        map.set(key, entry);
+      }
+      entry.total++;
+      entry.merged += record.mergedCount;
+      entry.conflicts += record.conflictsCount;
+      entry.errors += record.errorsCount;
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
   }
 
   async deleteHistory(): Promise<void> {

@@ -1,22 +1,31 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
+import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../core/services/api.service';
 import { HistoryService } from '../../core/services/history.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { TimeAgoPipe } from '../../shared/pipes/time-ago.pipe';
-import { HistoryRecord } from '../../shared/models/history.model';
+
+interface StatsEntry {
+  date: string;
+  total: number;
+  merged: number;
+  conflicts: number;
+  errors: number;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule, RouterLink,
-    MatCardModule, MatIconModule, MatButtonModule, MatListModule,
+    CommonModule, RouterLink, FormsModule,
+    MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatSelectModule,
     EmptyStateComponent, TimeAgoPipe,
   ],
   template: `
@@ -53,6 +62,44 @@ import { HistoryRecord } from '../../shared/models/history.model';
           </mat-card-content>
         </mat-card>
       </div>
+
+      <mat-card class="chart-card" *ngIf="stats().length > 0">
+        <mat-card-header>
+          <mat-card-title>Trend</mat-card-title>
+          <mat-form-field appearance="fill" subscriptSizing="dynamic" class="days-select">
+            <mat-select [(ngModel)]="selectedDays" (ngModelChange)="loadStats()">
+              <mat-option [value]="7">7 days</mat-option>
+              <mat-option [value]="14">14 days</mat-option>
+              <mat-option [value]="30">30 days</mat-option>
+              <mat-option [value]="90">90 days</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <div class="chart-y-labels">
+              <span>{{ maxVal() }}</span>
+              <span>{{ halfVal() }}</span>
+              <span>0</span>
+            </div>
+            <div class="chart-bars">
+              <div class="bar-column" *ngFor="let day of stats()">
+                <div class="bar-stack" [style.height]="barHeight(day)">
+                  <div class="bar merged" [style.height.%]="pct(day.merged, maxVal())" [title]="day.date + ' merged: ' + day.merged"></div>
+                  <div class="bar conflicts" [style.height.%]="pct(day.conflicts, maxVal())" [title]="day.date + ' conflicts: ' + day.conflicts"></div>
+                  <div class="bar errors" [style.height.%]="pct(day.errors, maxVal())" [title]="day.date + ' errors: ' + day.errors"></div>
+                </div>
+                <span class="bar-label">{{ day.date.slice(5) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-dot merged"></span> Merged</span>
+            <span><span class="legend-dot conflicts"></span> Conflicts</span>
+            <span><span class="legend-dot errors"></span> Errors</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
       <div class="dashboard-grid">
         <mat-card>
@@ -117,6 +164,24 @@ import { HistoryRecord } from '../../shared/models/history.model';
     .stat-card.error mat-icon { color: #c62828; }
     .stat-value { font-size: 28px; font-weight: 500; }
     .stat-label { font-size: 13px; color: rgba(0,0,0,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+    .chart-card { margin-bottom: 24px; }
+    .chart-card mat-card-header { display: flex; justify-content: space-between; align-items: center; }
+    .days-select { width: 120px; }
+    .chart-container { display: flex; gap: 8px; height: 200px; margin-top: 8px; }
+    .chart-y-labels { display: flex; flex-direction: column; justify-content: space-between; padding: 2px 4px 22px 0; font-size: 11px; color: rgba(0,0,0,0.5); min-width: 32px; text-align: right; }
+    .chart-bars { display: flex; flex: 1; align-items: flex-end; gap: 3px; }
+    .bar-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 4px; }
+    .bar-stack { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; transition: height 0.3s ease; }
+    .bar { width: 100%; min-height: 1px; transition: height 0.3s ease; }
+    .bar.merged { background: #2e7d32; }
+    .bar.conflicts { background: #e65100; }
+    .bar.errors { background: #c62828; }
+    .bar-label { font-size: 9px; color: rgba(0,0,0,0.5); margin-top: 4px; white-space: nowrap; transform: rotate(-45deg); transform-origin: left top; }
+    .chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 12px; color: rgba(0,0,0,0.7); }
+    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+    .legend-dot.merged { background: #2e7d32; }
+    .legend-dot.conflicts { background: #e65100; }
+    .legend-dot.errors { background: #c62828; }
     .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
     @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
     .empty-note { text-align: center; padding: 16px; color: rgba(0,0,0,0.4); }
@@ -129,6 +194,9 @@ export class DashboardComponent {
 
   providers = computed(() => this.api.providers.value() ?? []);
   historyRes = this.historyService.getList({ limit: 100, page: 1 });
+
+  stats = signal<StatsEntry[]>([]);
+  selectedDays = 30;
 
   recent = computed(() => {
     const h = this.historyRes.value();
@@ -149,7 +217,29 @@ export class DashboardComponent {
     (this.historyRes.value()?.items ?? []).reduce((s, r) => s + r.errorsCount, 0)
   );
 
+  maxVal = computed(() => Math.max(...this.stats().map(d => d.total), 1));
+  halfVal = computed(() => Math.round(this.maxVal() / 2));
+
+  constructor() {
+    this.loadStats();
+  }
+
   hasProviders() {
     return this.providers().length > 0;
+  }
+
+  loadStats() {
+    this.api.getHistoryStats(this.selectedDays).subscribe({
+      next: (data) => this.stats.set(data),
+    });
+  }
+
+  barHeight(day: StatsEntry): string {
+    const p = this.maxVal() > 0 ? (day.total / this.maxVal()) * 100 : 0;
+    return `max(4px, ${p}%)`;
+  }
+
+  pct(val: number, max: number): number {
+    return max > 0 ? (val / max) * 100 : 0;
   }
 }
