@@ -1,0 +1,36 @@
+FROM node:20-alpine AS ng-build
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run build
+
+FROM node:20-alpine AS api-build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY tsconfig.json ./
+COPY src/ ./src/
+RUN npx tsc
+
+FROM node:20-alpine
+RUN apk add --no-cache tzdata
+WORKDIR /app
+
+COPY --from=api-build /app/dist ./dist
+COPY --from=api-build /app/node_modules ./node_modules
+COPY --from=ng-build /app/public ./public
+COPY package*.json ./
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV STORAGE_TYPE=file
+ENV DATA_DIR=/app/data
+
+EXPOSE 3000
+VOLUME ["/app/data", "/app/logs"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/server.js"]

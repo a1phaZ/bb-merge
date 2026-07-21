@@ -587,9 +587,9 @@ CREATE TABLE users (
 
 | Задача | Статус |
 |--------|--------|
-| Multi-stage Dockerfile (Angular build → Backend build → Production) | 🟡 План |
-| .dockerignore | 🟡 План |
-| docker-compose.yml с volumes, healthcheck | 🟡 План |
+| Multi-stage Dockerfile (Angular build → Backend build → Production) | 🟢 Готово |
+| .dockerignore | 🟢 Готово |
+| docker-compose.yml с volumes, healthcheck | 🟢 Готово |
 | README — раздел Docker | 🟡 План |
 | GitHub Actions — авто-сборка Docker образа | 🟡 План |
 

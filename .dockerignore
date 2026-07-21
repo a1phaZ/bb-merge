@@ -1,0 +1,12 @@
+node_modules/
+.git/
+.gitignore
+*.md
+.env
+.env.example
+data/
+logs/
+dist/
+client/node_modules/
+client/.git/
+client/src/
