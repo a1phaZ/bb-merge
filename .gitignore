@@ -1,4 +1,5 @@
 node_modules/
+client/node_modules/
 dist/
 .env
 *.log
@@ -6,3 +7,4 @@ dist/
 data/
 data-test/
 logs/
+public/browser/

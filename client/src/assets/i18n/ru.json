@@ -1,0 +1,23 @@
+{
+  "app.title": "Merge Request Creator",
+  "nav.dashboard": "Панель управления",
+  "nav.providers": "Провайдеры",
+  "nav.newMR": "Новый Merge Request",
+  "nav.history": "История",
+  "nav.templates": "Шаблоны",
+  "nav.browser": "Ветки репозиториев",
+  "nav.webhooks": "Вебхуки",
+  "nav.logs": "Логи",
+  "nav.scheduler": "Планировщик",
+  "nav.users": "Пользователи",
+  "nav.settings": "Настройки",
+  "common.save": "Сохранить",
+  "common.cancel": "Отмена",
+  "common.delete": "Удалить",
+  "common.edit": "Редактировать",
+  "common.create": "Создать",
+  "common.search": "Поиск",
+  "common.loading": "Загрузка...",
+  "common.error": "Ошибка",
+  "common.success": "Успешно"
+}

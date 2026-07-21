@@ -77,14 +77,14 @@
 
 | Задача | Статус |
 |--------|--------|
-| Разделить `server.ts` на модули: routes, middleware, controllers | 🟡 План |
-| Создать DI-контейнер (awilix или ручной) для сервисов | 🟡 План |
-| Внедрить express-async-errors или обёртку для async route handlers | 🟡 План |
-| Добавить централизованный обработчик ошибок | 🟡 План |
-| Настроить structured logging (Winston) | 🟡 План |
-| Добавить Helmet, CORS, rate limiting | 🟡 План |
-| Настроить `.env` схему с валидацией (Zod/Joi) | 🟡 План |
-| Подготовить health endpoint с детальной информацией | 🟡 План |
+| Разделить `server.ts` на модули: routes, middleware, controllers | 🟢 Готово |
+| Создать DI-контейнер (awilix или ручной) для сервисов | ⚪ Отложено |
+| Внедрить express-async-errors или обёртку для async route handlers | 🟢 Готово |
+| Добавить централизованный обработчик ошибок | 🟢 Готово |
+| Настроить structured logging (Winston) | 🟢 Готово |
+| Добавить Helmet, CORS, rate limiting | 🟢 Готово |
+| Настроить `.env` схему с валидацией (Zod/Joi) | 🟢 Готово |
+| Подготовить health endpoint с детальной информацией | 🟢 Готово |
 
 **Ключевые файлы:**
 - `src/app.ts` — создание и конфигурация Express app
@@ -96,7 +96,6 @@
 - `src/middleware/rate-limiter.ts`
 - `src/routes/index.ts` — объединение всех роутов
 - `src/routes/health.ts`
-- `src/controllers/` — слой контроллеров
 
 ---
 
@@ -106,24 +105,25 @@
 
 | Задача | Статус |
 |--------|--------|
-| Инициализировать Angular standalone (v19+) в `client/` | 🟡 План |
-| Установить Angular Material с кастомной темой | 🟡 План |
-| Настроить `proxy.conf.json` (прокси `/api/*` → localhost:3000) | 🟡 План |
-| Создать Layout: sidebar (sidenav) + header + router-outlet | 🟡 План |
-| Настроить маршрутизацию всех страниц (заглушки) | 🟡 План |
-| Добавить empty states для пустых страниц | 🟡 План |
-| Настроить `@angular/localize` для будущей i18n | 🟡 План |
+| Инициализировать Angular standalone (v19+) в `client/` | 🟢 Готово |
+| Установить Angular Material с кастомной темой | 🟢 Готово |
+| Настроить `proxy.conf.json` (прокси `/api/*` → localhost:3000) | 🟢 Готово |
+| Создать Layout: sidebar (sidenav) + header + router-outlet | 🟢 Готово |
+| Настроить маршрутизацию всех страниц (заглушки) | 🟢 Готово |
+| Добавить empty states для пустых страниц | 🟢 Готово |
+| Настроить `@angular/localize` для будущей i18n | 🟢 Готово |
 
 **Ключевые файлы:**
 - `client/angular.json`
 - `client/proxy.conf.json`
 - `client/src/index.html`
 - `client/src/main.ts`
-- `client/src/app/app.component.html|ts|scss`
+- `client/src/app/app.component.ts`
 - `client/src/app/app.routes.ts`
 - `client/src/app/app.config.ts`
-- `client/src/app/shared/components/sidebar/`
-- `client/src/app/shared/components/header/`
+- `client/src/app/core/cache/cache.service.ts`
+- `client/src/app/core/interceptors/error.interceptor.ts`
+- `client/src/app/shared/components/empty-state/empty-state.component.ts`
 
 ---
 
@@ -133,13 +133,13 @@
 
 | Задача | Статус |
 |--------|--------|
-| Создать интерфейс `GitProvider` в `src/providers/interfaces.ts` | 🟡 План |
-| Создать базовые типы: `ProviderConfig`, `GitBranch`, `GitPullRequest`, `GitMergeStatus` | 🟡 План |
-| Рефакторинг `BitbucketClient` → `BitbucketProvider implements GitProvider` | 🟡 План |
-| Реализовать `GitLabProvider implements GitProvider` | 🟡 План |
-| Реализовать `GitHubProvider implements GitProvider` (REST v3 + опционально GraphQL v4) | 🟡 План |
-| Создать `ProviderFactory` для регистрации и создания провайдеров | 🟡 План |
-| Написать unit-тесты для каждого провайдера | 🟡 План |
+| Создать интерфейс `GitProvider` в `src/providers/interfaces.ts` | 🟢 Готово |
+| Создать базовые типы: `ProviderConfig`, `GitBranch`, `GitPullRequest`, `GitMergeStatus` | 🟢 Готово |
+| Рефакторинг `BitbucketClient` → `BitbucketProvider implements GitProvider` | 🟢 Готово |
+| Реализовать `GitLabProvider implements GitProvider` | 🟢 Готово |
+| Реализовать `GitHubProvider implements GitProvider` (REST v3) | 🟢 Готово |
+| Создать `ProviderFactory` для регистрации и создания провайдеров | 🟢 Готово |
+| Написать unit-тесты для каждого провайдера | 🟢 Готово |
 
 **Провайдер-специфичные адаптации:**
 
@@ -154,12 +154,10 @@
 
 **Ключевые файлы:**
 - `src/providers/interfaces.ts`
-- `src/providers/base.ts`
 - `src/providers/factory.ts`
 - `src/providers/bitbucket.ts`
 - `src/providers/gitlab.ts`
 - `src/providers/github.ts`
-- `src/providers/__tests__/`
 
 ---
 
@@ -169,12 +167,12 @@
 
 | Задача | Статус |
 |--------|--------|
-| Создать интерфейс `StorageProvider` в `src/storage/interfaces.ts` | 🟡 План |
-| Реализовать `FileStorageProvider` | 🟡 План |
-| Реализовать `SQLiteStorageProvider` (better-sqlite3) | 🟡 План |
-| Создать `StorageFactory` — выбор драйвера через env `STORAGE_TYPE` | 🟡 План |
-| Добавить шифрование токенов (AES-256-GCM) для обоих storage | 🟡 План |
-| Написать unit-тесты для обоих storage | 🟡 План |
+| Создать интерфейс `StorageProvider` в `src/storage/interfaces.ts` | 🟢 Готово |
+| Реализовать `FileStorageProvider` | 🟢 Готово |
+| Реализовать `SQLiteStorageProvider` (better-sqlite3) | 🟢 Готово |
+| Создать `StorageFactory` — выбор драйвера через env `STORAGE_TYPE` | 🟢 Готово |
+| Добавить шифрование токенов (AES-256-GCM) для обоих storage | 🟢 Готово |
+| Написать unit-тесты для обоих storage | 🟢 Готово |
 
 **Схема SQLite:**
 
@@ -269,31 +267,31 @@ data/
 
 | Метод | Endpoint | Назначение | Статус |
 |-------|----------|------------|--------|
-| `GET` | `/api/v1/providers` | Список провайдеров | 🟡 План |
-| `POST` | `/api/v1/providers` | Создать провайдер | 🟡 План |
-| `PUT` | `/api/v1/providers/:id` | Обновить провайдер | 🟡 План |
-| `DELETE` | `/api/v1/providers/:id` | Удалить провайдер | 🟡 План |
-| `POST` | `/api/v1/providers/:id/test` | Тест подключения | 🟡 План |
-| `GET` | `/api/v1/providers/:id/branches` | Список веток | 🟡 План |
-| `POST` | `/api/v1/merge-requests` | Создать MR | 🟡 План |
-| `GET` | `/api/v1/merge-requests/progress/:id` | SSE прогресс | 🟡 План |
-| `GET` | `/api/v1/history` | История запусков | 🟡 План |
-| `GET` | `/api/v1/history/:id` | Детали запуска | 🟡 План |
-| `DELETE` | `/api/v1/history` | Очистить историю | 🟡 План |
-| `GET` | `/api/v1/templates` | Список шаблонов | 🟡 План |
-| `POST` | `/api/v1/templates` | Создать шаблон | 🟡 План |
-| `PUT` | `/api/v1/templates/:id` | Обновить шаблон | 🟡 План |
-| `DELETE` | `/api/v1/templates/:id` | Удалить шаблон | 🟡 План |
-| `GET` | `/api/v1/logs` | Список лог-файлов | 🟡 План |
-| `GET` | `/api/v1/logs/:filename` | Содержимое лога | 🟡 План |
-| `DELETE` | `/api/v1/logs` | Очистить логи | 🟡 План |
+| `GET` | `/api/v1/providers` | Список провайдеров | 🟢 Готово |
+| `POST` | `/api/v1/providers` | Создать провайдер | 🟢 Готово |
+| `PUT` | `/api/v1/providers/:id` | Обновить провайдер | 🟢 Готово |
+| `DELETE` | `/api/v1/providers/:id` | Удалить провайдер | 🟢 Готово |
+| `POST` | `/api/v1/providers/:id/test` | Тест подключения | 🟢 Готово |
+| `GET` | `/api/v1/providers/:id/branches` | Список веток | 🟢 Готово |
+| `POST` | `/api/v1/merge-requests` | Создать MR (v2 async) | 🟢 Готово |
+| `GET` | `/api/v1/progress/:sessionId` | SSE прогресс | 🟢 Готово |
+| `GET` | `/api/v1/history` | История запусков | 🟢 Готово |
+| `GET` | `/api/v1/history/:id` | Детали запуска | 🟢 Готово |
+| `DELETE` | `/api/v1/history` | Очистить историю | 🟢 Готово |
+| `GET` | `/api/v1/templates` | Список шаблонов | 🟢 Готово |
+| `POST` | `/api/v1/templates` | Создать шаблон | 🟢 Готово |
+| `PUT` | `/api/v1/templates/:id` | Обновить шаблон | 🟢 Готово |
+| `DELETE` | `/api/v1/templates/:id` | Удалить шаблон | 🟢 Готово |
+| `GET` | `/api/v1/logs` | Список лог-файлов | 🟢 Готово |
+| `GET` | `/api/v1/logs/:filename` | Содержимое лога | 🟢 Готово |
+| `DELETE` | `/api/v1/logs` | Очистить логи | 🟢 Готово |
 | `GET` | `/api/v1/webhooks/events` | Webhook-события | 🟡 План |
 | `DELETE` | `/api/v1/webhooks/events` | Очистить события | 🟡 План |
 | `POST` | `/api/v1/webhooks/:providerId` | Зарегистрировать webhook | 🟡 План |
-| `GET` | `/api/v1/storage/type` | Тип storage | 🟡 План |
-| `PUT` | `/api/v1/storage/type` | Сменить storage | 🟡 План |
+| `GET` | `/api/v1/settings/storage-type` | Тип storage | 🟢 Готово |
+| `PUT` | `/api/v1/settings` | Сохранить настройки | 🟢 Готово |
 | `POST` | `/webhook/:providerId` | Webhook receiver | 🟡 План |
-| `GET` | `/health` | Health check | 🟡 План |
+| `GET` | `/health` | Health check | 🟢 Готово |
 | `GET` | `/metrics` | Prometheus metrics | 🟡 План |
 | `GET` | `/api/docs` | Swagger UI | 🟡 План |
 
@@ -325,13 +323,6 @@ data/
 **Ключевые файлы:**
 - `client/src/app/core/cache/cache.service.ts`
 - `client/src/app/core/services/api.service.ts`
-- `client/src/app/core/services/providers.service.ts`
-- `client/src/app/core/services/merge-request.service.ts`
-- `client/src/app/core/services/history.service.ts`
-- `client/src/app/core/services/templates.service.ts`
-- `client/src/app/core/services/logs.service.ts`
-- `client/src/app/core/services/webhooks.service.ts`
-- `client/src/app/core/services/settings.service.ts`
 - `client/src/app/core/interceptors/error.interceptor.ts`
 
 ---
