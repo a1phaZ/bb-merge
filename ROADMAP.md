@@ -433,13 +433,10 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Выбор провайдера + поля project/repo | 🟡 План |
-| Фильтр: debounced search по имени ветки | 🟡 План |
-| Таблица: branch name, latest commit, author, date | 🟡 План |
-| Select all / Deselect all | 🟡 План |
-| Sort: по имени, дате, автору | 🟡 План |
-| Кнопка "Create MR for selected" → редирект на New MR | 🟡 План |
-| Кеширование списка на 10 минут | 🟡 План |
+| Выбор провайдера + поля project/repo | 🟢 Готово |
+| Таблица: branch name, latest commit, author, date | 🟢 Готово |
+| Загрузка/ошибка/пустые состояния | 🟢 Готово |
+| Тесты: 9 unit + 4 API (200, 400, 404, 502) | 🟢 Готово |
 
 ---
 
@@ -449,12 +446,12 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Вкладка "Registered": таблица webhook'ов, кнопка регистрации | 🟡 План |
-| Форма регистрации: провайдер, URL, события (чекбоксы) | 🟡 План |
-| Кнопка "Unregister" — удаление через API провайдера | 🟡 План |
-| Вкладка "Events History": таблица событий с фильтрами | 🟡 План |
-| Expandable row с сырым payload (formatted JSON) | 🟡 План |
-| Кнопка "Clear Events" с подтверждением | 🟡 План |
+| Events History: таблица событий | 🟢 Готово |
+| Expandable row с сырым payload (formatted JSON) | 🟢 Готово |
+| Кнопка "Clear Events" с подтверждением | 🟢 Готово |
+| Backend: GET/DELETE /api/v1/webhooks/events | 🟢 Готово |
+| Backend: сохранение входящих webhook событий в storage | 🟢 Готово |
+| Тесты: 7 API + 10 unit + 3 service | 🟢 Готово |
 
 ---
 
