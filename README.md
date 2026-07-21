@@ -1,302 +1,198 @@
-# Bitbucket Merge Request Creator
+# Merge Request Manager
 
-Node.js приложение для автоматического создания merge request в Bitbucket Server/Data Center.
+Multi-provider Merge Request Manager with Angular 19 frontend, Express backend, and multi-provider Git support (Bitbucket/GitLab/GitHub).
 
-## Возможности
+## Features
 
-- Создание pull request для списка веток
-- Автоматический мерж при отсутствии конфликтов
-- Проверка конфликтов через API `canMerge`
-- Автоматическое добавление ревьювера (последний коммитер) при конфликтах
-- Поддержка webhook для отслеживания статуса
-- CLI и HTTP API интерфейсы
-- Детальный отчёт о результатах
+- **Multi-Provider**: Bitbucket Server, GitLab, GitHub
+- **Bulk Merge Requests**: Create PRs/MRs for multiple branches at once
+- **Auto-merge**: Automatically merge when no conflicts (merge/squash/fast-forward)
+- **Dry Run**: Validate configuration before creating real PRs
+- **Webhook Registration**: Register and receive webhooks per provider
+- **Dashboard**: Stats cards + trend chart (MRs per day)
+- **History**: Full operation history with detail expansion and rerun
+- **Templates**: Save and reuse merge request configurations
+- **Branch Browser**: Browse repository branches
+- **Live Log Tail**: Real-time log following via SSE
+- **Flexible Storage**: JSON file or SQLite (AES-256-GCM encrypted tokens)
+- **Docker**: Ready-to-deploy with docker-compose
 
-## Требования
+## Requirements
 
 - Node.js 18+
-- Bitbucket Server/Data Center с REST API
+- Docker (optional, for containerized deployment)
+- Git provider (Bitbucket Server/Data Center, GitLab, or GitHub)
 
-## Установка
+## Quick Start
+
+### Without Docker
 
 ```bash
-git clone <repository-url>
-cd merge-request
+# Backend
 npm install
-```
-
-## Настройка
-
-Создайте файл `.env` из примера:
-
-```bash
 cp .env.example .env
+npm run dev
+
+# Frontend (separate terminal)
+cd client
+npm install
+npm start
 ```
 
-Заполните переменные окружения:
+Frontend available at `http://localhost:4200`, API at `http://localhost:3000/api/v1`.
 
-```env
-BITBUCKET_URL=https://bitbucket.mycompany.com
-BITBUCKET_USERNAME=username
-BITBUCKET_PASSWORD=app-password
-PORT=3000
-WEBHOOK_SECRET=optional-secret
-```
-
-### Получение App Password
-
-1. Войдите в Bitbucket
-2. Перейдите в Profile → Personal Access Tokens
-3. Создайте новый токен с правами на запись pull request
-4. Скопируйте токен в `BITBUCKET_PASSWORD`
-
-## Формат входного файла
-
-```yaml
-project: MY_PROJECT
-repo: my-repository
-target: main
-branches:
-  - feature/login
-  - feature/dashboard
-  - bugfix/fix-header
-pr:
-  title_prefix: "Merge"
-  description: "Автоматический merge request"
-webhook:
-  url: https://myserver.com/webhook/bitbucket
-  events:
-    - pr:merged
-    - pr:updated
-```
-
-| Поле | Описание | Обязательно |
-|------|----------|-------------|
-| project | Ключ проекта в Bitbucket | Да |
-| repo | Slug репозитория | Да |
-| target | Целевая ветка для мержа | Да |
-| branches | Список веток для слияния | Да |
-| pr.title_prefix | Префикс для заголовка PR | Нет |
-| pr.description | Описание PR | Нет |
-| webhook.url | URL для webhook | Нет |
-| webhook.events | События для webhook | Нет |
-
-## Использование
-
-### CLI
+### With Docker
 
 ```bash
-# Сборка проекта
-npm run build
-
-# Запуск (только создание PR)
-node dist/cli.js --file examples/input.yaml
-
-# С авто-мержем (merge стратегия)
-node dist/cli.js --file examples/input.yaml --auto-merge
-
-# С squash стратегией
-node dist/cli.js --file examples/input.yaml --auto-merge --strategy squash
-
-# С указанием project/repo через CLI
-node dist/cli.js --file examples/input.yaml --project OTHER_PROJECT --repo other-repo
-
-# Development режим
-npm run cli -- --file examples/input.yaml --auto-merge
+docker compose up --build
 ```
 
-### CLI опции
+Frontend and API available at `http://localhost:3000`.
 
-| Опция | Описание | По умолчанию |
-|-------|----------|--------------|
-| `-f, --file <path>` | Путь к YAML конфигу | Обязательно |
-| `--auto-merge` | Автоматический мерж без конфликтов | false |
-| `--strategy <type>` | Стратегия мержа: merge, squash, rebase | merge |
-| `--project <key>` | Переопределить проект | Из конфига |
-| `--repo <slug>` | Переопределить репозиторий | Из конфига |
+## Configuration
 
-### HTTP Сервер
+### Environment Variables
 
-```bash
-# Запуск сервера
-npm run server
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment (`development`, `production`, `test`) | `development` |
+| `PORT` | Server port | `3000` |
+| `STORAGE_TYPE` | Storage backend (`file` or `sqlite`) | `file` |
+| `DATA_DIR` | Data directory | `./data` |
+| `ENCRYPTION_KEY` | AES-256-GCM key for token encryption (auto-generated if omitted) | — |
+| `WEBHOOK_SECRET` | Secret for webhook signature verification | — |
 
-| Endpoint | Метод | Описание |
-|----------|-------|----------|
-| `/health` | GET | Health check |
-| `/api/merge-requests` | POST | Создание PR |
-| `/webhook/bitbucket` | POST | Приём webhook |
+### Adding Git Providers
 
-#### Пример запроса
+1. Open the web UI at `/providers`
+2. Click "Add Provider"
+3. Choose type (Bitbucket/GitLab/GitHub)
+4. Enter API URL, project, repo, and authentication token
+5. Test the connection
 
-```bash
-curl -X POST http://localhost:3000/api/merge-requests \
-  -H "Content-Type: application/json" \
-  -d '{
-    "config": {
-      "project": "MY_PROJECT",
-      "repo": "my-repo",
-      "target": "main",
-      "branches": ["feature-1", "feature-2"]
-    },
-    "autoMerge": true,
-    "strategy": "squash"
-  }'
-```
+## API Endpoints
 
-#### Пример YAML в запросе
+All API endpoints are under `/api/v1/`:
 
-```bash
-curl -X POST http://localhost:3000/api/merge-requests \
-  -H "Content-Type: application/json" \
-  -d '{
-    "config": "project: MY_PROJECT\nrepo: my-repo\ntarget: main\nbranches:\n  - feature-1",
-    "autoMerge": true
-  }'
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/api/v1/providers` | List providers |
+| POST | `/api/v1/providers` | Create provider |
+| GET | `/api/v1/providers/:id` | Get provider |
+| PUT | `/api/v1/providers/:id` | Update provider |
+| DELETE | `/api/v1/providers/:id` | Delete provider |
+| POST | `/api/v1/providers/:id/test` | Test connection |
+| GET | `/api/v1/providers/:id/branches` | List branches |
+| POST | `/api/v1/merge-requests` | Create merge requests |
+| GET | `/api/v1/history` | List history |
+| GET | `/api/v1/history/stats` | History stats for chart |
+| GET | `/api/v1/history/:id` | Get history item |
+| DELETE | `/api/v1/history` | Clear history |
+| GET | `/api/v1/templates` | List templates |
+| POST | `/api/v1/templates` | Create template |
+| GET | `/api/v1/templates/:id` | Get template |
+| PUT | `/api/v1/templates/:id` | Update template |
+| DELETE | `/api/v1/templates/:id` | Delete template |
+| GET | `/api/v1/logs` | List log files |
+| GET | `/api/v1/logs/:file` | Get log content |
+| GET | `/api/v1/logs/tail` | SSE log tail stream |
+| DELETE | `/api/v1/logs` | Clear logs |
+| GET | `/api/v1/webhooks/events` | List webhook events |
+| DELETE | `/api/v1/webhooks/events` | Clear webhook events |
+| POST | `/api/v1/webhooks/register/:providerId` | Register webhook |
+| POST | `/api/v1/webhooks/receive/:providerId` | Receive webhook |
+| POST | `/api/v1/progress/:sessionId` | SSE progress stream |
 
-## Алгоритм работы
-
-```
-Для каждой ветки из списка:
-  1. Проверить существование ветки
-  2. Проверить существование открытого MR
-  3. Получить последнего коммитера из ветки
-  4. Создать Pull Request
-  5. Проверить конфликты через canMerge
-  6. Принять решение:
-     ├─ auto-merge ВКЛ И нет конфликтов:
-     │  → Автоматический мерж
-     └─ Есть конфликты:
-        → Добавить коммитера как ревьювера
-```
-
-## Пример отчёта
-
-```
-=== Merge Request Report ===
-Repo: MY_PROJECT/my-repository
-Target: main
-Auto-merge: Вкл (squash)
-Date: 2026-07-08 14:32:15
-
-┌─────────────────────────────────────────────────────┐
-│ Успешно смержено                                    │
-├─────────────────────────────────────────────────────┤
-│ ✓ feature/login → main                              │
-│   PR: #142 | Мерж: Автоматический ✓                 │
-└─────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────┐
-│ Требует внимания (конфликты)                        │
-├─────────────────────────────────────────────────────┤
-│ ⚠ feature/dashboard → main                          │
-│   PR: #143 | Конфликты: ДА                          │
-│   Ревьювер: john.doe (последний коммитер)           │
-└─────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────┐
-│ Пропущено                                          │
-├─────────────────────────────────────────────────────┤
-│ ✗ bugfix/fix-header → main                          │
-│   Причина: Ветка не найдена                         │
-└─────────────────────────────────────────────────────┘
-
-Webhook: Зарегистрирован
-
-Итого:
-  Создано PR: 2
-  Автоматически смержено: 1
-  С конфликтами: 1
-  Пропущено: 1
-  Ошибок: 0
-```
-
-## Merge стратегии
-
-| Стратегия | Описание |
-|-----------|----------|
-| `merge` | Стандартный merge commit (по умолчанию) |
-| `squash` | Сquash всех коммитов в один |
-| `rebase` | Rebase без merge commit |
-
-## Обработка ошибок
-
-| Ситуация | Действие |
-|----------|----------|
-| Ветка не найдена | Пропустить + предупреждение |
-| MR уже существует | Пропустить + info |
-| Конфликты обнаружены | Создать PR + добавить ревьювера |
-| Ошибка API | Лог ошибки + продолжить |
-| Webhook не зарегистрирован | Warning + продолжить |
-
-## Webhook
-
-Приложение может регистрировать webhook в Bitbucket для отслеживания событий:
-
-```yaml
-webhook:
-  url: https://myserver.com/webhook/bitbucket
-  events:
-    - pr:merged
-    - pr:updated
-```
-
-### Поддерживаемые события
-
-- `pr:opened` - PR создан
-- `pr:updated` - PR обновлён
-- `pr:merged` - PR смержен
-- `pr:declined` - PR отклонён
-- `pr:deleted` - PR удалён
-
-### Приём webhook
-
-Сервер автоматически принимает webhook на `/webhook/bitbucket` и логирует события:
-
-```
-[2026-07-08T14:32:15.000Z] Webhook received: pr:merged
-  PR #142: Merge feature/login into main
-  State: MERGED
-  Author: John Doe
-```
-
-## Структура проекта
+## Project Structure
 
 ```
 merge-request/
-├── package.json          # Зависимости и скрипты
-├── tsconfig.json         # Конфигурация TypeScript
-├── .env.example          # Пример переменных окружения
+├── package.json              # Backend dependencies
+├── tsconfig.json             # TypeScript config
+├── .env.example              # Environment variables template
+├── docker-compose.yml        # Docker Compose config
+├── Dockerfile                # Multi-stage Docker build
 ├── src/
-│   ├── types.ts          # TypeScript интерфейсы
-│   ├── parser.ts         # YAML парсер
-│   ├── validator.ts      # Joi валидация
-│   ├── bitbucket.ts      # API клиент Bitbucket
-│   ├── reporter.ts       # Формирование отчёта
-│   ├── cli.ts            # CLI интерфейс
-│   ├── server.ts         # Express сервер
-│   └── index.ts          # Entry point
-├── dist/                 # Скомпилированные файлы
-└── examples/
-    └── input.yaml        # Пример конфигурации
+│   ├── config.ts             # Zod env validation
+│   ├── logger.ts             # Winston logger
+│   ├── index.ts              # Express server entry
+│   ├── routes/               # Express route handlers
+│   │   ├── index.ts          # Route mounting
+│   │   ├── health.ts         # Health endpoint
+│   │   ├── providers.ts      # Provider CRUD
+│   │   ├── merge-requests.ts # Legacy v1
+│   │   ├── merge-requests-v2.ts # Async v2 with SSE
+│   │   ├── history.ts        # History + stats
+│   │   ├── templates.ts      # Template CRUD
+│   │   ├── logs.ts           # Log files + SSE tail
+│   │   ├── settings.ts       # Settings CRUD
+│   │   ├── progress.ts       # SSE progress sessions
+│   │   └── webhooks.ts       # Webhook registration/receive
+│   ├── providers/            # Git provider implementations
+│   │   ├── interfaces.ts     # Provider interface + types
+│   │   ├── factory.ts        # Provider registry
+│   │   ├── bitbucket.ts      # Bitbucket provider
+│   │   ├── gitlab.ts         # GitLab provider
+│   │   └── github.ts         # GitHub provider
+│   ├── storage/              # Storage implementations
+│   │   ├── interfaces.ts     # Storage interface + types
+│   │   ├── factory.ts        # Storage factory
+│   │   ├── file.ts           # JSON file storage
+│   │   ├── sqlite.ts         # SQLite storage
+│   │   └── crypto.ts         # AES-256-GCM encryption
+│   ├── middleware/
+│   │   └── error-handler.ts  # AppError + error middleware
+│   └── __tests__/            # Test files (vitest + supertest)
+├── client/                   # Angular 19 frontend
+│   ├── package.json
+│   ├── angular.json
+│   └── src/app/
+│       ├── app.routes.ts     # Route config (lazy-loaded)
+│       ├── app.config.ts     # App providers
+│       ├── core/services/    # Angular services
+│       ├── pages/            # Page components
+│       │   ├── dashboard/    # Dashboard (stats + chart)
+│       │   ├── providers/    # Provider management
+│       │   ├── merge-request-new/ # New MR form
+│       │   ├── history/      # History list + detail
+│       │   ├── templates/    # Template CRUD
+│       │   ├── browser/      # Branch browser
+│       │   ├── webhooks/     # Webhook management
+│       │   ├── logs/         # Log viewer + live tail
+│       │   └── settings/     # Settings page
+│       └── shared/           # Shared components/pipes/models
+├── public/                   # Built frontend (served by Express)
+└── logs/                     # Application log files
 ```
 
-## API Bitbucket Server
+## Testing
 
-Приложение использует следующие endpoints:
+```bash
+# Backend tests (vitest)
+npm test
 
-| Endpoint | Метод | Описание |
-|----------|-------|----------|
-| `/rest/api/1.0/projects/{project}/repos/{repo}/branches` | GET | Проверка существования ветки |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/pull-requests` | GET | Поиск существующего PR |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/pull-requests` | POST | Создание PR |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/pull-requests/{id}/merge` | GET | Проверка конфликтов |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/pull-requests/{id}/merge` | POST | Мерж PR |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/pull-requests/{id}` | PUT | Добавление ревьювера |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/commits` | GET | Получение коммитов |
-| `/rest/api/1.0/projects/{project}/repos/{repo}/webhooks` | POST | Регистрация webhook |
+# Frontend tests (via Angular CLI)
+cd client && npm test
+```
+
+## Docker
+
+```bash
+# Build and start
+docker compose up --build
+
+# Stop
+docker compose down
+
+# Run in background
+docker compose up -d
+```
+
+The Docker image uses a multi-stage build:
+1. **Stage 1**: Build Angular frontend
+2. **Stage 2**: Compile TypeScript backend
+3. **Final**: Run Express server serving both API and frontend
 
 ## License
 

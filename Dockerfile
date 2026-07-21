@@ -1,7 +1,7 @@
 FROM node:20-alpine AS ng-build
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 COPY client/ ./
 RUN npm run build
 
