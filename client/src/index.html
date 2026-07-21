@@ -8,8 +8,23 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <link id="theme-css" rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>
+  <script>
+    (function() {
+      var theme = localStorage.getItem('ui_theme') || 'light';
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var isDark = theme === 'dark' || (theme === 'auto' && prefersDark);
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+      }
+      var link = document.getElementById('theme-css');
+      if (link) {
+        link.href = isDark ? '/assets/themes/purple-green.css' : '/assets/themes/indigo-pink.css';
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ body.dark-theme { background: #303030; color: #e0e0e0; }
 .mt-16 { margin-top: 16px; }
 .mb-16 { margin-bottom: 16px; }
 
+/* ===== Shared / utility ===== */
 body.dark-theme .content-container { color: #e0e0e0; }
 body.dark-theme .empty-note { color: rgba(255,255,255,0.4); }
 body.dark-theme .error-banner { background: #4a1c1c; color: #ff8a80; }
@@ -20,3 +21,60 @@ body.dark-theme code { background: #424242; color: #e0e0e0; }
 body.dark-theme .empty-state .icon { color: rgba(255,255,255,0.25); }
 body.dark-theme .empty-state h3 { color: rgba(255,255,255,0.6); }
 body.dark-theme .empty-state p { color: rgba(255,255,255,0.4); }
+
+/* ===== Dashboard ===== */
+body.dark-theme .stat-label { color: rgba(255,255,255,0.6); }
+body.dark-theme .chart-y-labels { color: rgba(255,255,255,0.5); }
+body.dark-theme .bar-label { color: rgba(255,255,255,0.5); }
+body.dark-theme .chart-legend { color: rgba(255,255,255,0.7); }
+
+/* ===== Browser ===== */
+body.dark-theme .branch-icon { color: rgba(255,255,255,0.35); }
+body.dark-theme .commit-hash { background: #424242; }
+body.dark-theme .branch-row:hover { background: rgba(255,255,255,0.05); }
+
+/* ===== History ===== */
+body.dark-theme .type-badge { background: #424242; }
+body.dark-theme .type-badge.bitbucket { background: #1a3a5c; color: #90caf9; }
+body.dark-theme .type-badge.gitlab { background: #3d2600; color: #ffab40; }
+body.dark-theme .type-badge.github { background: #1b3d1b; color: #81c784; }
+body.dark-theme .badge.error { background: #4a1c1c; color: #ef9a9a; }
+body.dark-theme .detail-row { background: rgba(255,255,255,0.04); }
+body.dark-theme .branch-chip { background: #424242; }
+
+/* ===== Merge Request New ===== */
+body.dark-theme .event-item { background: rgba(255,255,255,0.06); }
+body.dark-theme .event-item.done { background: rgba(46,125,50,0.2); }
+body.dark-theme .event-item.error { background: rgba(198,40,40,0.2); }
+body.dark-theme .event-item.warning { background: rgba(230,81,0,0.2); }
+body.dark-theme .event-branch { background: #424242; color: rgba(255,255,255,0.7); }
+body.dark-theme .event-pr { color: #90caf9; }
+body.dark-theme .badge-dry { background: #3d2600; color: #ffab40; border-color: #ffab40; }
+body.dark-theme .branch-count { color: rgba(255,255,255,0.6); }
+body.dark-theme .chip { background: #1a3a5c; color: #90caf9; }
+body.dark-theme .chip:hover { background: #1f4a75; }
+
+/* ===== Providers ===== */
+body.dark-theme .type-badge.bitbucket { background: #1a3a5c; color: #90caf9; }
+body.dark-theme .type-badge.gitlab { background: #3d2600; color: #ffab40; }
+body.dark-theme .type-badge.github { background: #1b3d1b; color: #81c784; }
+body.dark-theme .test-result.success { background: rgba(46,125,50,0.2); color: #81c784; }
+body.dark-theme .test-result.error { background: rgba(198,40,40,0.2); color: #ef9a9a; }
+
+/* ===== Settings ===== */
+body.dark-theme .storage-badge { background: #37474f; color: #90caf9; }
+body.dark-theme code { background: #424242; color: #e0e0e0; }
+body.dark-theme .empty-note { color: rgba(255,255,255,0.4); }
+
+/* ===== Templates ===== */
+body.dark-theme .meta-chip { background: #424242; color: rgba(255,255,255,0.7); }
+body.dark-theme .template-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+
+/* ===== Webhooks ===== */
+body.dark-theme .event-badge { background: #1a3a5c; color: #90caf9; }
+body.dark-theme .event-row:hover { background: rgba(255,255,255,0.05); }
+body.dark-theme .detail-row { background: rgba(255,255,255,0.04); }
+
+/* ===== AppComponent ===== */
+body.dark-theme .active-link { background: rgba(63, 81, 181, 0.25); }
+body.dark-theme .active-link .mat-icon { color: #9fa8da; }
