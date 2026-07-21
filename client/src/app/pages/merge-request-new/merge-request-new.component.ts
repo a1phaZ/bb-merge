@@ -86,11 +86,15 @@ import { Subscription } from 'rxjs';
             <mat-slide-toggle [(ngModel)]="form.autoMerge">Auto-merge after creation</mat-slide-toggle>
           </div>
 
+          <div class="toggle-row mt-16">
+            <mat-slide-toggle [(ngModel)]="form.dryRun">Dry run (validate only, no changes)</mat-slide-toggle>
+          </div>
+
           <div class="form-actions mt-16">
-            <button mat-raised-button color="primary" (click)="execute()"
+            <button mat-raised-button [color]="form.dryRun ? 'accent' : 'primary'" (click)="execute()"
               [disabled]="!canExecute() || executing()" size="large">
-              <mat-icon>play_arrow</mat-icon>
-              {{ executing() ? 'Creating...' : 'Create Merge Requests' }}
+              <mat-icon>{{ form.dryRun ? 'science' : 'play_arrow' }}</mat-icon>
+              {{ executing() ? (form.dryRun ? 'Validating...' : 'Creating...') : (form.dryRun ? 'Run Dry Run' : 'Create Merge Requests') }}
             </button>
           </div>
         </mat-card-content>
@@ -100,7 +104,11 @@ import { Subscription } from 'rxjs';
     <div *ngIf="step() === 'progress'">
       <mat-card>
         <mat-card-content>
-          <h3>Creating Merge Requests</h3>
+          <h3>
+            <ng-container *ngIf="form.dryRun; else realModeTitle">Dry Run Validation</ng-container>
+            <ng-template #realModeTitle>Creating Merge Requests</ng-template>
+            <span class="badge" [class.badge-dry]="form.dryRun" *ngIf="form.dryRun">DRY RUN</span>
+          </h3>
           <mat-progress-bar mode="indeterminate" *ngIf="!progressDone()"></mat-progress-bar>
 
           <div class="event-list">
@@ -114,6 +122,9 @@ import { Subscription } from 'rxjs';
           </div>
 
           <div class="form-actions mt-16" *ngIf="progressDone()">
+            <button mat-raised-button (click)="switchToReal()" *ngIf="form.dryRun" color="primary">
+              <mat-icon>play_arrow</mat-icon> Create Merge Requests for Real
+            </button>
             <button mat-raised-button color="primary" (click)="reset()">
               <mat-icon>refresh</mat-icon> Create Another
             </button>
@@ -139,6 +150,8 @@ import { Subscription } from 'rxjs';
     .event-message { flex: 1; font-size: 14px; }
     .event-branch { font-size: 12px; color: rgba(0,0,0,0.6); background: #e0e0e0; padding: 2px 8px; border-radius: 4px; }
     .event-pr { font-size: 12px; font-weight: 500; color: #1565c0; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .badge-dry { background: #fff3e0; color: #e65100; border: 1px solid #e65100; }
     .mt-16 { margin-top: 16px; }
   `,
 })
@@ -164,6 +177,7 @@ export class MergeRequestNewComponent {
     description: '',
     autoMerge: false,
     strategy: 'merge',
+    dryRun: false,
   };
 
   private sub: Subscription | null = null;
@@ -216,12 +230,19 @@ export class MergeRequestNewComponent {
     });
   }
 
+  switchToReal() {
+    this.form.dryRun = false;
+    this.step.set('form');
+    this.events.set([]);
+    this.progressDone.set(false);
+  }
+
   reset() {
     this.sub?.unsubscribe();
     this.step.set('form');
     this.events.set([]);
     this.progressDone.set(false);
-    this.form = { providerId: '', project: '', repo: '', target: 'main', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge' };
+    this.form = { providerId: '', project: '', repo: '', target: 'main', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge', dryRun: false };
     this.branchesText = '';
   }
 

@@ -9,6 +9,7 @@ export interface MergeRequestCreate {
   autoMerge?: boolean;
   strategy?: string;
   sessionId?: string;
+  dryRun?: boolean;
 }
 
 export interface MergeRequestResponse {
