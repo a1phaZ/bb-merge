@@ -105,7 +105,7 @@
 
 | Задача | Статус |
 |--------|--------|
-| Инициализировать Angular standalone (v19+) в `client/` | 🟢 Готово |
+| Инициализировать Angular standalone (v22+, zoneless) в `client/` | 🟢 Готово |
 | Установить Angular Material с кастомной темой | 🟢 Готово |
 | Настроить `proxy.conf.json` (прокси `/api/*` → localhost:3000) | 🟢 Готово |
 | Создать Layout: sidebar (sidenav) + header + router-outlet | 🟢 Готово |
@@ -287,10 +287,11 @@ data/
 | `DELETE` | `/api/v1/logs` | Очистить логи | 🟢 Готово |
 | `GET` | `/api/v1/webhooks/events` | Webhook-события | 🟢 Готово |
 | `DELETE` | `/api/v1/webhooks/events` | Очистить события | 🟢 Готово |
-| `POST` | `/api/v1/webhooks/:providerId` | Зарегистрировать webhook | 🟡 План |
+| `POST` | `/api/v1/webhooks/register/:providerId` | Зарегистрировать webhook | 🟢 Готово |
 | `GET` | `/api/v1/settings/storage-type` | Тип storage | 🟢 Готово |
 | `PUT` | `/api/v1/settings` | Сохранить настройки | 🟢 Готово |
-| `POST` | `/webhook/:providerId` | Webhook receiver | 🟡 План |
+| `POST` | `/api/v1/webhooks/receive/:providerId` | Webhook receiver | 🟢 Готово |
+| `POST` | `/webhook/:providerId` | Webhook receiver (legacy) | 🟢 Готово |
 | `GET` | `/health` | Health check | 🟢 Готово |
 | `GET` | `/metrics` | Prometheus metrics | 🟡 План |
 | `GET` | `/api/docs` | Swagger UI | 🟡 План |
@@ -373,12 +374,12 @@ data/
 | Шаг 4 — source branches (textarea) | 🟢 Готово |
 | Шаг 5 — PR options (title_prefix, description) | 🟢 Готово |
 | Шаг 6 — Merge options (auto-merge toggle, strategy dropdown) | 🟢 Готово |
-| Шаг 7 — Webhook (toggle, URL, события чекбоксы) | 🟡 План |
-| Dry-Run toggle — preview только | 🟡 План |
+| Шаг 7 — Webhook (toggle, URL, события чекбоксы) | 🟢 Готово |
+| Dry-Run toggle — preview только | 🟢 Готово |
 | SSE прогресс для каждой ветки (timeline с иконками) | 🟢 Готово |
 | Отчёт после завершения: timeline событий | 🟢 Готово |
-| Кнопки: "Copy report", "Save to history", "Save as template" | 🟡 План |
-| Load branches from repository | 🟡 План |
+| Кнопки: "Copy report", "Save to history", "Save as template" | 🟢 Готово |
+| Load branches from repository | 🟢 Готово |
 
 ---
 
@@ -389,7 +390,7 @@ data/
 | Задача | Статус |
 |--------|--------|
 | Stats cards: всего PR, merged, conflicts, errors | 🟢 Готово |
-| Chart: PR по дням/неделям (ngx-charts) | 🟡 План |
+| Chart: PR по дням/неделям (CSS, без внешних зависимостей) | 🟢 Готово |
 | Recent operations: последние 5 записей истории | 🟢 Готово |
 | Providers status: список провайдеров с индикатором | 🟢 Готово |
 | Quick actions: "New MR", "Browse Branches", "View History" | 🟢 Готово |
@@ -408,7 +409,7 @@ data/
 | Поиск: по project/repo/branch (debounced) | 🟢 Готово |
 | Пагинация (Angular Material paginator) | 🟢 Готово |
 | Детальный просмотр: результаты по веткам, дата, ID | 🟢 Готово |
-| Кнопка "Rerun" → копировать конфигурацию в `/merge-request/new` | 🟡 План |
+| Кнопка "Rerun" → копировать конфигурацию в `/merge-request/new` | 🟢 Готово |
 | Кнопка "Clear History" с confirm dialog | 🟢 Готово |
 
 ---
@@ -465,7 +466,7 @@ data/
 | Просмотр содержимого (monospace) | 🟢 Готово |
 | Кнопки: "Download", "Delete" | 🟢 Готово |
 | Кнопка "Clear All Logs" с confirm dialog | 🟢 Готово |
-| Live tail — кнопка "Follow" (SSE для новых записей) | 🟡 План |
+| Live tail — кнопка "Follow" (SSE для новых записей) | 🟢 Готово |
 
 ---
 
@@ -569,13 +570,13 @@ CREATE TABLE users (
 
 | Задача | Статус |
 |--------|--------|
-| Helmet middleware — security headers | 🟡 План |
-| Rate limiting (express-rate-limit) | 🟡 План |
-| CSP Headers — strict Content-Security-Policy | 🟡 План |
+| Helmet middleware — security headers | 🟢 Готово |
+| Rate limiting (express-rate-limit) | 🟢 Готово |
+| CSP Headers — strict Content-Security-Policy | 🟢 Готово |
 | Input validation на всех API (Zod/Joi) | 🟡 План |
-| Secrets masking в API (`••••••••`) | 🟡 План |
-| Encryption at rest: AES-256-GCM для токенов | 🟡 План |
-| CORS строгая настройка | 🟡 План |
+| Secrets masking в API (`••••••••`) | 🟢 Готово |
+| Encryption at rest: AES-256-GCM для токенов | 🟢 Готово |
+| CORS строгая настройка | 🟢 Готово |
 | Логирование безопасности (входы, ошибки auth, admin действия) | 🟡 План |
 
 ---
@@ -587,7 +588,7 @@ CREATE TABLE users (
 | Multi-stage Dockerfile (Angular build → Backend build → Production) | 🟢 Готово |
 | .dockerignore | 🟢 Готово |
 | docker-compose.yml с volumes, healthcheck | 🟢 Готово |
-| README — раздел Docker | 🟡 План |
+| README — раздел Docker | 🟢 Готово |
 | GitHub Actions — авто-сборка Docker образа | 🟡 План |
 
 ---

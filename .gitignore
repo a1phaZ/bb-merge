@@ -10,3 +10,4 @@ dist/
 /data-test/
 /logs/
 public/browser/
+client/.angular/

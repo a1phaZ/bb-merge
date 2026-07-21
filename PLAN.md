@@ -2,7 +2,7 @@
 
 > **Детальный план реализации**  
 > Основание: ROADMAP.md (30 этапов)  
-> Технологии: Express (backend), Angular 19+ (frontend), Angular Material (UI), SQLite/File (storage)
+> Технологии: Express (backend), Angular 22+ (frontend), Angular Material (UI), SQLite/File (storage)
 
 ---
 
@@ -59,7 +59,7 @@
 │  └──────────────────────────────────────────────────────────┘  │
 │                           │                                      │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Angular SPA (Angular 19+)                    │  │
+│  │              Angular SPA (Angular 22+)                    │  │
 │  │                                                           │  │
 │  │  ┌──────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
 │  │  │  Signals  │  │  rxResource  │  │  CacheService     │  │  │
@@ -108,14 +108,13 @@
 
 | Компонент | Технология | Назначение |
 |-----------|-----------|------------|
-| Framework | Angular 19+ (standalone) | SPA |
+| Framework | Angular 22+ (standalone, zoneless) | SPA |
 | UI Kit | Angular Material | Компоненты |
 | State | Signals + rxResource | Реактивность |
 | HTTP | HttpClient + interceptors | API calls |
 | Cache | CacheService (in-memory) | Кеширование с TTL 10 мин |
-| Charts | ngx-charts | Графики |
+| Charts | CSS/SVG (ngx-charts не используется) | Графики |
 | i18n | @angular/localize + ngx-translate | Локализация |
-| Charts | ngx-charts | Dashboard графики |
 
 ---
 
@@ -395,7 +394,7 @@ export interface StorageProvider {
   deleteProvider(id: string): Promise<void>;
 
   // History
-  getHistory(filter?: HistoryFilter): Promise<HistoryRecord[]>;
+  getHistory(filter?: HistoryFilter): Promise<PaginatedResult<HistoryRecord>>;
   getHistoryItem(id: string): Promise<HistoryRecord | null>;
   saveHistory(record: HistoryRecord): Promise<void>;
   deleteHistory(): Promise<void>;
@@ -1155,7 +1154,7 @@ ng add @angular/material
 **Примерный объём:** 1-2 дня
 
 1. Stats cards
-2. Chart
+2. Chart (CSS, без внешних зависимостей)
 3. Recent operations
 4. Quick actions
 

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import chokidar from 'chokidar';
 import { AppError } from '../middleware/error-handler';
 
 const LOG_DIR = path.resolve('logs');
@@ -55,8 +56,9 @@ router.get('/tail', (req: Request, res: Response) => {
     res.write(`data: ${JSON.stringify({ type: 'init', content: initial })}\n\n`);
 
     let watcherActive = true;
-    const watcher = fs.watch(filepath, (eventType) => {
-      if (!watcherActive || eventType !== 'change') return;
+    const watcher = chokidar.watch(filepath, { persistent: true, ignoreInitial: true });
+    watcher.on('change', () => {
+      if (!watcherActive) return;
       try {
         const stat = fs.statSync(filepath);
         if (stat.size > fileSize) {

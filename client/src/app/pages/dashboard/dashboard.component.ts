@@ -1,4 +1,5 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -188,7 +189,8 @@ interface StatsEntry {
     .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
   `,
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnDestroy {
+  private statsSub?: Subscription;
   private api = inject(ApiService);
 
   providers = computed(() => this.api.providers.value() ?? []);
@@ -228,9 +230,14 @@ export class DashboardComponent {
   }
 
   loadStats() {
-    this.api.getHistoryStats(this.selectedDays).subscribe({
+    this.statsSub?.unsubscribe();
+    this.statsSub = this.api.getHistoryStats(this.selectedDays).subscribe({
       next: (data) => this.stats.set(data),
     });
+  }
+
+  ngOnDestroy() {
+    this.statsSub?.unsubscribe();
   }
 
   barHeight(day: StatsEntry): string {
