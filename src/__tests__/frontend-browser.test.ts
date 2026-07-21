@@ -7,9 +7,13 @@ class MockSignal<T> {
   set(v: T) { this._val = v; }
 }
 
-function signal<T>(val: T): MockSignal<T> & { (): T } {
-  const s = new MockSignal(val) as any;
-  return Object.assign(() => s.value(), { set: (v: T) => s.set(v), update: (fn: (v: T) => T) => s.set(fn(s.value())) });
+function signal<T>(val: T): MockSignal<T> & (() => T) {
+  const s = new MockSignal(val);
+  return Object.assign(() => s.value(), {
+    value: () => s.value(),
+    set: (v: T): void => { s.set(v); },
+    update: (fn: (v: T) => T): void => { s.set(fn(s.value())); },
+  }) as unknown as MockSignal<T> & (() => T);
 }
 
 class BrowserComponent {

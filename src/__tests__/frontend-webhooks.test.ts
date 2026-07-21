@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 class MockSignal<T> {
   private _val: T;
@@ -7,9 +7,13 @@ class MockSignal<T> {
   set(v: T) { this._val = v; }
 }
 
-function signal<T>(val: T): MockSignal<T> & { (): T } {
-  const s = new MockSignal(val) as any;
-  return Object.assign(() => s.value(), { set: (v: T) => s.set(v), update: (fn: (v: T) => T) => s.set(fn(s.value())) });
+function signal<T>(val: T): MockSignal<T> & (() => T) {
+  const s = new MockSignal(val);
+  return Object.assign(() => s.value(), {
+    value: () => s.value(),
+    set: (v: T): void => { s.set(v); },
+    update: (fn: (v: T) => T): void => { s.set(fn(s.value())); },
+  }) as unknown as MockSignal<T> & (() => T);
 }
 
 class WebhooksComponent {
@@ -53,7 +57,7 @@ class WebhooksComponent {
   }
 
   clearAll() {
-    if (!confirm('Clear all webhook events?')) return;
+    if (!(globalThis as any).confirm('Clear all webhook events?')) return;
     const obs = this.webhooksService.deleteEvents();
     obs.subscribe({
       next: () => {
@@ -155,20 +159,20 @@ describe('WebhooksComponent', () => {
   });
 
   it('clearAll does nothing without confirm', () => {
-    const originalConfirm = globalThis.confirm;
-    globalThis.confirm = vi.fn(() => false);
+    const originalConfirm = (globalThis as any).confirm;
+    (globalThis as any).confirm = vi.fn(() => false);
     mockService.getEvents.mockReturnValue({ subscribe: () => {} });
 
     const comp = new WebhooksComponent(mockService, mockSnackBar);
     comp.clearAll();
     expect(mockService.deleteEvents).not.toHaveBeenCalled();
 
-    globalThis.confirm = originalConfirm;
+    (globalThis as any).confirm = originalConfirm;
   });
 
   it('clearAll deletes events on confirm', () => {
-    const originalConfirm = globalThis.confirm;
-    globalThis.confirm = vi.fn(() => true);
+    const originalConfirm = (globalThis as any).confirm;
+    (globalThis as any).confirm = vi.fn(() => true);
     mockService.getEvents.mockReturnValue({ subscribe: () => {} });
     mockService.deleteEvents.mockReturnValue({
       subscribe: (callbacks: any) => { callbacks.next(); },
@@ -179,12 +183,12 @@ describe('WebhooksComponent', () => {
     expect(mockService.deleteEvents).toHaveBeenCalled();
     expect(mockSnackBar.open).toHaveBeenCalledWith('Webhook events cleared', 'Close', { duration: 2000 });
 
-    globalThis.confirm = originalConfirm;
+    (globalThis as any).confirm = originalConfirm;
   });
 
   it('clearAll shows error snackbar on failure', () => {
-    const originalConfirm = globalThis.confirm;
-    globalThis.confirm = vi.fn(() => true);
+    const originalConfirm = (globalThis as any).confirm;
+    (globalThis as any).confirm = vi.fn(() => true);
     mockService.getEvents.mockReturnValue({ subscribe: () => {} });
     mockService.deleteEvents.mockReturnValue({
       subscribe: (callbacks: any) => { callbacks.error({ message: 'Delete failed' }); },
@@ -194,6 +198,6 @@ describe('WebhooksComponent', () => {
     comp.clearAll();
     expect(mockSnackBar.open).toHaveBeenCalledWith('Delete failed', 'Close', { duration: 3000 });
 
-    globalThis.confirm = originalConfirm;
+    (globalThis as any).confirm = originalConfirm;
   });
 });
