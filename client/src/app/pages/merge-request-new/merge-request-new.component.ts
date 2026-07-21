@@ -12,6 +12,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { TemplatesService } from '../../core/services/templates.service';
@@ -27,156 +28,188 @@ import { Subscription } from 'rxjs';
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule, MatExpansionModule,
+    TranslatePipe,
   ],
   template: `
-    <h1 class="page-title mat-headline-4">New Merge Request</h1>
+    <h1 class="page-title mat-headline-4">{{ 'mrNew.title' | translate }}</h1>
 
-    <div *ngIf="step() === 'form'">
-      <mat-card class="form-card">
-        <mat-card-content>
-          <div class="form-grid">
-            <mat-form-field appearance="fill">
-              <mat-label>Provider</mat-label>
-              <mat-select [(ngModel)]="form.providerId">
-                <mat-option *ngFor="let p of providers()" [value]="p.id">
-                  {{ p.name }} ({{ p.type }})
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-              <mat-label>Project</mat-label>
-              <input matInput [(ngModel)]="form.project" placeholder="MY_PROJECT">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-              <mat-label>Repository</mat-label>
-              <input matInput [(ngModel)]="form.repo" placeholder="my-repo">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-              <mat-label>Target Branch</mat-label>
-              <input matInput [(ngModel)]="form.target" placeholder="main">
-            </mat-form-field>
-          </div>
-
-          <div class="load-branches-row mt-16">
-            <button mat-stroked-button (click)="loadBranches()"
-              [disabled]="!form.providerId || !form.project || !form.repo || loadingBranches()">
-              <mat-icon>download</mat-icon>
-              {{ loadingBranches() ? 'Loading...' : 'Load Branches' }}
-            </button>
-            <span class="branch-count" *ngIf="loadedBranches().length > 0">
-              {{ loadedBranches().length }} branches loaded
-            </span>
-          </div>
-
-          <mat-form-field appearance="fill" class="full-width mt-16">
-            <mat-label>Source Branches (one per line)</mat-label>
-            <textarea matInput rows="5" [(ngModel)]="branchesText" placeholder="feature/new-feature&#10;bugfix/issue-123&#10;hotfix/critical"></textarea>
-          </mat-form-field>
-
-          <div class="branch-chips" *ngIf="loadedBranches().length > 0">
-            <span class="chip" *ngFor="let b of loadedBranches()" (click)="addBranch(b.displayId)">
-              {{ b.displayId }}
-            </span>
-          </div>
-
-          <div class="form-grid mt-16">
-            <mat-form-field appearance="fill">
-              <mat-label>Title Prefix</mat-label>
-              <input matInput [(ngModel)]="form.titlePrefix" placeholder="Merge">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-              <mat-label>Strategy</mat-label>
-              <mat-select [(ngModel)]="form.strategy">
-                <mat-option value="merge">Merge Commit</mat-option>
-                <mat-option value="squash">Squash</mat-option>
-                <mat-option value="fast-forward">Fast Forward</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <mat-form-field appearance="fill" class="full-width mt-16">
-            <mat-label>Description (optional)</mat-label>
-            <textarea matInput rows="3" [(ngModel)]="form.description" placeholder="Auto-created merge request"></textarea>
-          </mat-form-field>
-
-          <div class="toggle-row mt-16">
-            <mat-slide-toggle [(ngModel)]="form.autoMerge">Auto-merge after creation</mat-slide-toggle>
-          </div>
-
-          <div class="toggle-row mt-16">
-            <mat-slide-toggle [(ngModel)]="form.dryRun">Dry run (validate only, no changes)</mat-slide-toggle>
-          </div>
-
-          <mat-accordion class="mt-16">
-            <mat-expansion-panel>
-              <mat-expansion-panel-header>
-                <mat-panel-title>Webhook</mat-panel-title>
-                <mat-panel-description>Register a webhook after creation</mat-panel-description>
-              </mat-expansion-panel-header>
-              <mat-form-field appearance="fill" class="full-width">
-                <mat-label>Webhook URL</mat-label>
-                <input matInput [(ngModel)]="form.webhookUrl" placeholder="https://hooks.example.com/webhook">
+    @if (step() === 'form') {
+      <div>
+        <mat-card class="form-card">
+          <mat-card-content>
+            <div class="form-grid">
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.provider' | translate }}</mat-label>
+                <mat-select [(ngModel)]="form.providerId">
+                  @for (p of providers(); track p.id) {
+                    <mat-option [value]="p.id">
+                      {{ p.name }} ({{ p.type }})
+                    </mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
-              <mat-form-field appearance="fill" class="full-width">
-                <mat-label>Events</mat-label>
-                <input matInput [(ngModel)]="webhookEventsText" placeholder="pr:merged, pr:updated">
-                <mat-hint>Comma-separated event types</mat-hint>
+
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.project' | translate }}</mat-label>
+                <input matInput [(ngModel)]="form.project" placeholder="MY_PROJECT">
               </mat-form-field>
-            </mat-expansion-panel>
-          </mat-accordion>
 
-          <div class="form-actions mt-16">
-            <button mat-raised-button [color]="form.dryRun ? 'accent' : 'primary'" (click)="execute()"
-              [disabled]="!canExecute() || executing()" size="large">
-              <mat-icon>{{ form.dryRun ? 'science' : 'play_arrow' }}</mat-icon>
-              {{ executing() ? (form.dryRun ? 'Validating...' : 'Creating...') : (form.dryRun ? 'Run Dry Run' : 'Create Merge Requests') }}
-            </button>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.repository' | translate }}</mat-label>
+                <input matInput [(ngModel)]="form.repo" placeholder="my-repo">
+              </mat-form-field>
 
-    <div *ngIf="step() === 'progress'">
-      <mat-card>
-        <mat-card-content>
-          <h3>
-            <ng-container *ngIf="form.dryRun; else realModeTitle">Dry Run Validation</ng-container>
-            <ng-template #realModeTitle>Creating Merge Requests</ng-template>
-            <span class="badge" [class.badge-dry]="form.dryRun" *ngIf="form.dryRun">DRY RUN</span>
-          </h3>
-          <mat-progress-bar mode="indeterminate" *ngIf="!progressDone()"></mat-progress-bar>
-
-          <div class="event-list">
-            <div *ngFor="let ev of events()" class="event-item" [class.done]="ev.type === 'success'"
-                 [class.error]="ev.type === 'error'" [class.warning]="ev.type === 'warning'">
-              <mat-icon>{{ eventIcon(ev.type) }}</mat-icon>
-              <span class="event-message">{{ ev.message }}</span>
-              <span class="event-branch" *ngIf="ev.branch">{{ ev.branch }}</span>
-              <span class="event-pr" *ngIf="ev.prId">#{{ ev.prId }}</span>
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.targetBranch' | translate }}</mat-label>
+                <input matInput [(ngModel)]="form.target" placeholder="main">
+              </mat-form-field>
             </div>
-          </div>
 
-          <div class="form-actions mt-16" *ngIf="progressDone()">
-            <button mat-raised-button (click)="switchToReal()" *ngIf="form.dryRun" color="primary">
-              <mat-icon>play_arrow</mat-icon> Create Merge Requests for Real
-            </button>
-            <button mat-stroked-button (click)="copyReport()" *ngIf="!form.dryRun">
-              <mat-icon>content_copy</mat-icon> Copy Report
-            </button>
-            <button mat-stroked-button (click)="saveAsTemplate()">
-              <mat-icon>bookmark</mat-icon> Save as Template
-            </button>
-            <button mat-raised-button color="primary" (click)="reset()">
-              <mat-icon>refresh</mat-icon> Create Another
-            </button>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+            <div class="load-branches-row mt-16">
+              <button mat-stroked-button (click)="loadBranches()"
+                [disabled]="!form.providerId || !form.project || !form.repo || loadingBranches()">
+                <mat-icon>download</mat-icon>
+                {{ loadingBranches() ? ('mrNew.loading' | translate) : ('mrNew.loadBranches' | translate) }}
+              </button>
+              @if (loadedBranches().length > 0) {
+                <span class="branch-count">
+                  {{ loadedBranches().length }} {{ 'mrNew.branchesLoaded' | translate }}
+                </span>
+              }
+            </div>
+
+            <mat-form-field appearance="fill" class="full-width mt-16">
+              <mat-label>{{ 'mrNew.sourceBranches' | translate }}</mat-label>
+              <textarea matInput rows="5" [(ngModel)]="branchesText" placeholder="feature/new-feature&#10;bugfix/issue-123&#10;hotfix/critical"></textarea>
+            </mat-form-field>
+
+            @if (loadedBranches().length > 0) {
+              <div class="branch-chips">
+                @for (b of loadedBranches(); track b.displayId) {
+                  <span class="chip" (click)="addBranch(b.displayId)">
+                    {{ b.displayId }}
+                  </span>
+                }
+              </div>
+            }
+
+            <div class="form-grid mt-16">
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.titlePrefix' | translate }}</mat-label>
+                <input matInput [(ngModel)]="form.titlePrefix" placeholder="Merge">
+              </mat-form-field>
+
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'mrNew.strategy' | translate }}</mat-label>
+                <mat-select [(ngModel)]="form.strategy">
+                  <mat-option value="merge">{{ 'mrNew.mergeCommit' | translate }}</mat-option>
+                  <mat-option value="squash">{{ 'mrNew.squash' | translate }}</mat-option>
+                  <mat-option value="fast-forward">{{ 'mrNew.fastForward' | translate }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="fill" class="full-width mt-16">
+              <mat-label>{{ 'mrNew.description' | translate }}</mat-label>
+              <textarea matInput rows="3" [(ngModel)]="form.description" placeholder="Auto-created merge request"></textarea>
+            </mat-form-field>
+
+            <div class="toggle-row mt-16">
+              <mat-slide-toggle [(ngModel)]="form.autoMerge">{{ 'mrNew.autoMerge' | translate }}</mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row mt-16">
+              <mat-slide-toggle [(ngModel)]="form.dryRun">{{ 'mrNew.dryRun' | translate }}</mat-slide-toggle>
+            </div>
+
+            <mat-accordion class="mt-16">
+              <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ 'mrNew.webhook' | translate }}</mat-panel-title>
+                  <mat-panel-description>{{ 'mrNew.registerWebhook' | translate }}</mat-panel-description>
+                </mat-expansion-panel-header>
+                <mat-form-field appearance="fill" class="full-width">
+                  <mat-label>{{ 'mrNew.webhookUrl' | translate }}</mat-label>
+                  <input matInput [(ngModel)]="form.webhookUrl" placeholder="https://hooks.example.com/webhook">
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="full-width">
+                  <mat-label>{{ 'mrNew.events' | translate }}</mat-label>
+                  <input matInput [(ngModel)]="webhookEventsText" placeholder="pr:merged, pr:updated">
+                  <mat-hint>{{ 'mrNew.eventTypes' | translate }}</mat-hint>
+                </mat-form-field>
+              </mat-expansion-panel>
+            </mat-accordion>
+
+            <div class="form-actions mt-16">
+              <button mat-raised-button [color]="form.dryRun ? 'accent' : 'primary'" (click)="execute()"
+                [disabled]="!canExecute() || executing()" size="large">
+                <mat-icon>{{ form.dryRun ? 'science' : 'play_arrow' }}</mat-icon>
+                {{ executing() ? (form.dryRun ? ('mrNew.validating' | translate) : ('mrNew.creating' | translate)) : (form.dryRun ? ('mrNew.runDryRun' | translate) : ('mrNew.create' | translate)) }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    @if (step() === 'progress') {
+      <div>
+        <mat-card>
+          <mat-card-content>
+            <h3>
+              @if (form.dryRun) {
+                {{ 'mrNew.validationTitle' | translate }}
+              } @else {
+                {{ 'mrNew.creatingTitle' | translate }}
+              }
+              @if (form.dryRun) {
+                <span class="badge badge-dry">DRY RUN</span>
+              }
+            </h3>
+            @if (!progressDone()) {
+              <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            }
+
+            <div class="event-list">
+              @for (ev of events(); track $index) {
+                <div class="event-item" [class.done]="ev.type === 'success'"
+                     [class.error]="ev.type === 'error'" [class.warning]="ev.type === 'warning'">
+                  <mat-icon>{{ eventIcon(ev.type) }}</mat-icon>
+                  <span class="event-message">{{ ev.message }}</span>
+                  @if (ev.branch) {
+                    <span class="event-branch">{{ ev.branch }}</span>
+                  }
+                  @if (ev.prId) {
+                    <span class="event-pr">#{{ ev.prId }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (progressDone()) {
+              <div class="form-actions mt-16">
+                @if (form.dryRun) {
+                  <button mat-raised-button (click)="switchToReal()" color="primary">
+                    <mat-icon>play_arrow</mat-icon> {{ 'mrNew.createReal' | translate }}
+                  </button>
+                }
+                @if (!form.dryRun) {
+                  <button mat-stroked-button (click)="copyReport()">
+                    <mat-icon>content_copy</mat-icon> {{ 'mrNew.copyReport' | translate }}
+                  </button>
+                }
+                <button mat-stroked-button (click)="saveAsTemplate()">
+                  <mat-icon>bookmark</mat-icon> {{ 'mrNew.saveTemplate' | translate }}
+                </button>
+                <button mat-raised-button color="primary" (click)="reset()">
+                  <mat-icon>refresh</mat-icon> {{ 'mrNew.createAnother' | translate }}
+                </button>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
   `,
   styles: `
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

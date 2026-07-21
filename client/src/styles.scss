@@ -1,5 +1,6 @@
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, 'Helvetica Neue', sans-serif; background: #f5f5f5; }
+body.dark-theme { background: #303030; color: #e0e0e0; }
 
 .mat-mdc-header-cell { font-weight: 600; }
 .content-container { padding: 24px; max-width: 1200px; margin: 0 auto; }
@@ -9,3 +10,13 @@ body { margin: 0; font-family: Roboto, 'Helvetica Neue', sans-serif; background:
 .text-right { text-align: right; }
 .mt-16 { margin-top: 16px; }
 .mb-16 { margin-bottom: 16px; }
+
+body.dark-theme .content-container { color: #e0e0e0; }
+body.dark-theme .empty-note { color: rgba(255,255,255,0.4); }
+body.dark-theme .error-banner { background: #4a1c1c; color: #ff8a80; }
+body.dark-theme .branch-count { color: rgba(255,255,255,0.6); }
+body.dark-theme .storage-badge { background: #37474f; color: #90caf9; }
+body.dark-theme code { background: #424242; color: #e0e0e0; }
+body.dark-theme .empty-state .icon { color: rgba(255,255,255,0.25); }
+body.dark-theme .empty-state h3 { color: rgba(255,255,255,0.6); }
+body.dark-theme .empty-state p { color: rgba(255,255,255,0.4); }

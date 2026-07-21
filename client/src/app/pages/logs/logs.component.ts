@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { LogsService } from '../../core/services/logs.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -17,83 +18,92 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
     CommonModule,
     MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
     MatSnackBarModule, MatTooltipModule,
-    EmptyStateComponent,
+    TranslatePipe, EmptyStateComponent,
   ],
   template: `
     <div class="header">
-      <h1 class="page-title mat-headline-4">Logs</h1>
-      <button mat-stroked-button color="warn" (click)="deleteAll()" *ngIf="files().length > 0">
-        <mat-icon>delete_sweep</mat-icon> Clear All
-      </button>
+      <h1 class="page-title mat-headline-4">{{ 'logs.title' | translate }}</h1>
+      @if (files().length > 0) {
+        <button mat-stroked-button color="warn" (click)="deleteAll()">
+          <mat-icon>delete_sweep</mat-icon> {{ 'logs.clearAll' | translate }}
+        </button>
+      }
     </div>
 
-    <div *ngIf="!selectedFile()">
-      <mat-card>
-        <mat-card-content>
-          <table mat-table [dataSource]="files()" class="full-width" *ngIf="files().length > 0">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>File</th>
-              <td mat-cell *matCellDef="let f">{{ f.name }}</td>
-            </ng-container>
-            <ng-container matColumnDef="size">
-              <th mat-header-cell *matHeaderCellDef>Size</th>
-              <td mat-cell *matCellDef="let f">{{ formatSize(f.size) }}</td>
-            </ng-container>
-            <ng-container matColumnDef="modifiedAt">
-              <th mat-header-cell *matHeaderCellDef>Modified</th>
-              <td mat-cell *matCellDef="let f">{{ f.modifiedAt | date:'short' }}</td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let f">
-                <button mat-icon-button (click)="viewFile(f.name)" matTooltip="View">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button mat-icon-button (click)="downloadFile(f.name)" matTooltip="Download">
-                  <mat-icon>download</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteFile(f.name)" matTooltip="Delete">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="['name','size','modifiedAt','actions']"></tr>
-            <tr mat-row *matRowDef="let row; columns: ['name','size','modifiedAt','actions'];"></tr>
-          </table>
+    @if (!selectedFile()) {
+      <div>
+        <mat-card>
+          <mat-card-content>
+            @if (files().length > 0) {
+              <table mat-table [dataSource]="files()" class="full-width">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'logs.file' | translate }}</th>
+                  <td mat-cell *matCellDef="let f">{{ f.name }}</td>
+                </ng-container>
+                <ng-container matColumnDef="size">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'logs.size' | translate }}</th>
+                  <td mat-cell *matCellDef="let f">{{ formatSize(f.size) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="modifiedAt">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'logs.modified' | translate }}</th>
+                  <td mat-cell *matCellDef="let f">{{ f.modifiedAt | date:'short' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let f">
+                    <button mat-icon-button (click)="viewFile(f.name)" matTooltip="{{ 'logs.view' | translate }}">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="downloadFile(f.name)" matTooltip="{{ 'logs.download' | translate }}">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteFile(f.name)" matTooltip="{{ 'logs.delete' | translate }}">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['name','size','modifiedAt','actions']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['name','size','modifiedAt','actions'];"></tr>
+              </table>
+            }
+            @if (files().length === 0) {
+              <app-empty-state icon="terminal"
+                [title]="'logs.none' | translate"
+                [description]="'logs.noneHint' | translate" />
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
 
-          <app-empty-state *ngIf="files().length === 0" icon="terminal"
-            title="No log files"
-            description="Application logs will appear here." />
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <div *ngIf="selectedFile()">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>{{ selectedFile() }}</mat-card-title>
-          <button mat-icon-button (click)="selectedFile.set(null); stopFollowing()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-card-header>
-        <mat-card-content>
-          <pre class="log-content" #logContainer>{{ logContent() }}</pre>
-          <div class="view-actions">
-            <button mat-stroked-button (click)="toggleFollow()" [color]="following() ? 'primary' : ''"
-              [disabled]="!selectedFile()">
-              <mat-icon>{{ following() ? 'sync' : 'sync_disabled' }}</mat-icon>
-              {{ following() ? 'Following...' : 'Follow' }}
+    @if (selectedFile()) {
+      <div>
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>{{ selectedFile() }}</mat-card-title>
+            <button mat-icon-button (click)="selectedFile.set(null); stopFollowing()">
+              <mat-icon>close</mat-icon>
             </button>
-            <button mat-stroked-button (click)="downloadFile(selectedFile()!)">
-              <mat-icon>download</mat-icon> Download
-            </button>
-            <button mat-stroked-button color="warn" (click)="deleteFile(selectedFile()!); selectedFile.set(null); stopFollowing()">
-              <mat-icon>delete</mat-icon> Delete
-            </button>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+          </mat-card-header>
+          <mat-card-content>
+            <pre class="log-content" #logContainer>{{ logContent() }}</pre>
+            <div class="view-actions">
+              <button mat-stroked-button (click)="toggleFollow()" [color]="following() ? 'primary' : ''"
+                [disabled]="!selectedFile()">
+                <mat-icon>{{ following() ? 'sync' : 'sync_disabled' }}</mat-icon>
+                {{ following() ? ('logs.following' | translate) : ('logs.follow' | translate) }}
+              </button>
+              <button mat-stroked-button (click)="downloadFile(selectedFile()!)">
+                <mat-icon>download</mat-icon> {{ 'logs.downloadBtn' | translate }}
+              </button>
+              <button mat-stroked-button color="warn" (click)="deleteFile(selectedFile()!); selectedFile.set(null); stopFollowing()">
+                <mat-icon>delete</mat-icon> {{ 'logs.deleteBtn' | translate }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
   `,
   styles: `
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }

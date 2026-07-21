@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TemplatesService } from '../../core/services/templates.service';
 import { ApiService } from '../../core/services/api.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -24,104 +25,122 @@ import { Template } from '../../shared/models/template.model';
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSlideToggleModule, MatSnackBarModule, MatTooltipModule,
-    EmptyStateComponent,
+    TranslatePipe, EmptyStateComponent,
   ],
   template: `
     <div class="header">
-      <h1 class="page-title mat-headline-4">Templates</h1>
-      <button mat-raised-button color="primary" (click)="openCreate()" *ngIf="!showForm()">
-        <mat-icon>add</mat-icon> New Template
-      </button>
+      <h1 class="page-title mat-headline-4">{{ 'templates.title' | translate }}</h1>
+      @if (!showForm()) {
+        <button mat-raised-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> {{ 'templates.new' | translate }}
+        </button>
+      }
     </div>
 
-    <mat-card *ngIf="showForm()" class="form-card">
-      <mat-card-content>
-        <h3>{{ editingId() ? 'Edit Template' : 'New Template' }}</h3>
-        <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Name</mat-label>
-            <input matInput [(ngModel)]="form.name" placeholder="Deploy to staging">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Provider</mat-label>
-            <mat-select [(ngModel)]="form.providerId">
-              <mat-option value="">Any</mat-option>
-              <mat-option *ngFor="let p of providers()" [value]="p.id">{{ p.name }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Project</mat-label>
-            <input matInput [(ngModel)]="form.project">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Repository</mat-label>
-            <input matInput [(ngModel)]="form.repo">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Target Branch</mat-label>
-            <input matInput [(ngModel)]="form.target" placeholder="main">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Branches (one per line)</mat-label>
-            <textarea matInput rows="3" [(ngModel)]="formBranches" placeholder="feature/*&#10;bugfix/*"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Title Prefix</mat-label>
-            <input matInput [(ngModel)]="form.titlePrefix" placeholder="Merge">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Strategy</mat-label>
-            <mat-select [(ngModel)]="form.strategy">
-              <mat-option value="merge">Merge Commit</mat-option>
-              <mat-option value="squash">Squash</mat-option>
-              <mat-option value="fast-forward">Fast Forward</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <mat-slide-toggle [(ngModel)]="form.autoMerge" class="mt-16">Auto-merge</mat-slide-toggle>
-        <div class="form-actions mt-16">
-          <button mat-button (click)="cancelForm()">Cancel</button>
-          <button mat-raised-button color="primary" (click)="save()" [disabled]="!form.name || !form.target">
-            {{ editingId() ? 'Update' : 'Create' }}
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <div *ngIf="!showForm()" class="cards-grid">
-      <mat-card class="template-card" *ngFor="let t of templates()">
-        <mat-card-header>
-          <mat-card-title>{{ t.name }}</mat-card-title>
-          <mat-card-subtitle>{{ t.target }} · {{ branchCount(t) }} branches</mat-card-subtitle>
-        </mat-card-header>
+    @if (showForm()) {
+      <mat-card class="form-card">
         <mat-card-content>
-          <div class="template-meta">
-            <span *ngIf="t.providerId" class="meta-chip">Provider: {{ providerName(t.providerId) }}</span>
-            <span *ngIf="t.project" class="meta-chip">{{ t.project }}/{{ t.repo }}</span>
-            <span class="meta-chip">{{ t.strategy }}</span>
-            <span class="meta-chip" *ngIf="t.autoMerge">Auto-merge</span>
+          <h3>{{ editingId() ? ('templates.edit' | translate) : ('templates.new' | translate) }}</h3>
+          <div class="form-grid">
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.name' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.name" placeholder="Deploy to staging">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.provider' | translate }}</mat-label>
+              <mat-select [(ngModel)]="form.providerId">
+                <mat-option value="">{{ 'templates.any' | translate }}</mat-option>
+                @for (p of providers(); track p.id) {
+                  <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.project' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.project">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.repository' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.repo">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.targetBranch' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.target" placeholder="main">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.branches' | translate }}</mat-label>
+              <textarea matInput rows="3" [(ngModel)]="formBranches" placeholder="feature/*&#10;bugfix/*"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.titlePrefix' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.titlePrefix" placeholder="Merge">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'templates.strategy' | translate }}</mat-label>
+              <mat-select [(ngModel)]="form.strategy">
+                <mat-option value="merge">{{ 'templates.mergeCommit' | translate }}</mat-option>
+                <mat-option value="squash">{{ 'templates.squash' | translate }}</mat-option>
+                <mat-option value="fast-forward">{{ 'templates.fastForward' | translate }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <mat-slide-toggle [(ngModel)]="form.autoMerge" class="mt-16">{{ 'templates.autoMerge' | translate }}</mat-slide-toggle>
+          <div class="form-actions mt-16">
+            <button mat-button (click)="cancelForm()">{{ 'templates.cancel' | translate }}</button>
+            <button mat-raised-button color="primary" (click)="save()" [disabled]="!form.name || !form.target">
+              {{ editingId() ? ('templates.update' | translate) : ('templates.create' | translate) }}
+            </button>
           </div>
         </mat-card-content>
-        <mat-card-actions>
-          <button mat-raised-button color="primary" routerLink="/merge-request/new" [queryParams]="{template: t.id}" matTooltip="Use this template">
-            <mat-icon>play_arrow</mat-icon> Use
-          </button>
-          <button mat-stroked-button (click)="exportTemplate(t)" matTooltip="Export as JSON">
-            <mat-icon>download</mat-icon>
-          </button>
-          <button mat-stroked-button (click)="editTemplate(t)" matTooltip="Edit">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-stroked-button color="warn" (click)="deleteTemplate(t)" matTooltip="Delete">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-card-actions>
       </mat-card>
-    </div>
+    }
 
-    <app-empty-state *ngIf="!showForm() && templates().length === 0" icon="description"
-      title="No templates yet"
-      description="Create reusable templates for frequently used merge request configurations." />
+    @if (!showForm()) {
+      <div class="cards-grid">
+        @for (t of templates(); track t.id) {
+          <mat-card class="template-card">
+            <mat-card-header>
+              <mat-card-title>{{ t.name }}</mat-card-title>
+              <mat-card-subtitle>{{ t.target }} · {{ branchCount(t) }} {{ 'templates.count' | translate }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="template-meta">
+                @if (t.providerId) {
+                  <span class="meta-chip">{{ 'templates.provider' | translate }}: {{ providerName(t.providerId) }}</span>
+                }
+                @if (t.project) {
+                  <span class="meta-chip">{{ t.project }}/{{ t.repo }}</span>
+                }
+                <span class="meta-chip">{{ t.strategy }}</span>
+                @if (t.autoMerge) {
+                  <span class="meta-chip">{{ 'templates.autoMerge' | translate }}</span>
+                }
+              </div>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" routerLink="/merge-request/new" [queryParams]="{template: t.id}" matTooltip="{{ 'templates.use' | translate }}">
+                <mat-icon>play_arrow</mat-icon> {{ 'templates.use' | translate }}
+              </button>
+              <button mat-stroked-button (click)="exportTemplate(t)" matTooltip="{{ 'templates.exportJson' | translate }}">
+                <mat-icon>download</mat-icon>
+              </button>
+              <button mat-stroked-button (click)="editTemplate(t)" matTooltip="{{ 'providers.editAction' | translate }}">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-stroked-button color="warn" (click)="deleteTemplate(t)" matTooltip="{{ 'providers.delete' | translate }}">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+
+    @if (!showForm() && templates().length === 0) {
+      <app-empty-state icon="description"
+        [title]="'templates.none' | translate"
+        [description]="'templates.noneHint' | translate" />
+    }
 
     <input type="file" #fileInput accept=".json,.yaml,.yml" (change)="importTemplate($event)" style="display:none">
   `,

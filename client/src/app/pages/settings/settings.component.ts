@@ -10,8 +10,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { SettingsService } from '../../core/services/settings.service';
+import { UiSettingsService, Theme } from '../../core/services/ui-settings.service';
 
 @Component({
   selector: 'app-settings',
@@ -21,71 +23,94 @@ import { SettingsService } from '../../core/services/settings.service';
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatTabsModule, MatListModule, MatSnackBarModule,
+    TranslatePipe,
   ],
   template: `
-    <h1 class="page-title mat-headline-4">Settings</h1>
+    <h1 class="page-title mat-headline-4">{{ 'settings.title' | translate }}</h1>
 
     <nav mat-tab-nav-bar [tabPanel]="tabPanel">
-      <a mat-tab-link [active]="tab() === 'app'" (click)="tab.set('app')">Application</a>
-      <a mat-tab-link [active]="tab() === 'storage'" (click)="tab.set('storage')">Storage</a>
-      <a mat-tab-link [active]="tab() === 'notifications'" (click)="tab.set('notifications')" disabled>Notifications</a>
+      <a mat-tab-link [active]="tab() === 'app'" (click)="tab.set('app')">{{ 'settings.application' | translate }}</a>
+      <a mat-tab-link [active]="tab() === 'storage'" (click)="tab.set('storage')">{{ 'settings.storage' | translate }}</a>
+      <a mat-tab-link [active]="tab() === 'notifications'" (click)="tab.set('notifications')" disabled>{{ 'settings.notifications' | translate }}</a>
     </nav>
     <mat-tab-nav-panel #tabPanel>
-      <div *ngIf="tab() === 'app'" class="tab-content">
+      @if (tab() === 'app') {
+        <div class="tab-content">
         <mat-card>
-          <mat-card-header><mat-card-title>Application Settings</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>{{ 'settings.appSettings' | translate }}</mat-card-title></mat-card-header>
           <mat-card-content>
             <mat-list>
               <mat-list-item>
-                <span matListItemTitle>Storage Type</span>
+                <span matListItemTitle>{{ 'settings.storageType' | translate }}</span>
                 <span matListItemLine>{{ storageType() }}</span>
               </mat-list-item>
               <mat-list-item>
-                <span matListItemTitle>Environment</span>
+                <span matListItemTitle>{{ 'settings.environment' | translate }}</span>
                 <span matListItemLine>{{ env() }}</span>
               </mat-list-item>
             </mat-list>
 
-            <h3 class="mt-16 mb-16">Custom Settings</h3>
+            <h3 class="mt-16 mb-16">{{ 'settings.customSettings' | translate }}</h3>
             <div class="form-grid">
-              <mat-form-field appearance="fill" *ngFor="let key of settingKeys()">
-                <mat-label>{{ key }}</mat-label>
-                <input matInput [(ngModel)]="editableSettings[key]">
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'settings.language' | translate }}</mat-label>
+                <mat-select [ngModel]="uiSettings.language()" (ngModelChange)="uiSettings.language.set($event)">
+                  <mat-option value="en">{{ 'settings.english' | translate }}</mat-option>
+                  <mat-option value="ru">{{ 'settings.russian' | translate }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="fill">
+                <mat-label>{{ 'settings.theme' | translate }}</mat-label>
+                <mat-select [ngModel]="uiSettings.theme()" (ngModelChange)="uiSettings.theme.set($event)">
+                  <mat-option value="light">{{ 'settings.light' | translate }}</mat-option>
+                  <mat-option value="dark">{{ 'settings.dark' | translate }}</mat-option>
+                  <mat-option value="auto">{{ 'settings.auto' | translate }}</mat-option>
+                </mat-select>
               </mat-form-field>
             </div>
-            <p *ngIf="settingKeys().length === 0" class="empty-note">No custom settings configured.</p>
-            <button mat-raised-button color="primary" (click)="saveSettings()" *ngIf="settingKeys().length > 0">
-              <mat-icon>save</mat-icon> Save Settings
-            </button>
+            @if (settingKeys().length === 0) {
+              <p class="empty-note">{{ 'settings.noCustom' | translate }}</p>
+            }
+            @if (settingKeys().length > 0) {
+              <button mat-raised-button color="primary" (click)="saveSettings()">
+                <mat-icon>save</mat-icon> {{ 'settings.save' | translate }}
+              </button>
+            }
           </mat-card-content>
         </mat-card>
-      </div>
+        </div>
+      }
 
-      <div *ngIf="tab() === 'storage'" class="tab-content">
+      @if (tab() === 'storage') {
+        <div class="tab-content">
         <mat-card>
-          <mat-card-header><mat-card-title>Storage</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>{{ 'settings.storageSection' | translate }}</mat-card-title></mat-card-header>
           <mat-card-content>
             <mat-list>
               <mat-list-item>
-                <span matListItemTitle>Current Type</span>
+                <span matListItemTitle>{{ 'settings.currentType' | translate }}</span>
                 <span matListItemLine>
                   <span class="storage-badge">{{ storageType() }}</span>
                 </span>
               </mat-list-item>
             </mat-list>
-            <p class="mt-16">Storage type is configured via the <code>STORAGE_TYPE</code> environment variable.</p>
+            <p class="mt-16">{{ 'settings.storageHint' | translate }}</p>
           </mat-card-content>
         </mat-card>
-      </div>
+        </div>
+      }
 
-      <div *ngIf="tab() === 'notifications'" class="tab-content">
+      @if (tab() === 'notifications') {
+        <div class="tab-content">
         <mat-card>
-          <mat-card-header><mat-card-title>Notifications</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>{{ 'settings.notifications' | translate }}</mat-card-title></mat-card-header>
           <mat-card-content>
-            <p>Notification channels (Email, Telegram, Slack) will be available in v2.0.</p>
+            <p>{{ 'settings.notificationsHint' | translate }}</p>
           </mat-card-content>
         </mat-card>
-      </div>
+        </div>
+      }
     </mat-tab-nav-panel>
   `,
   styles: `
@@ -103,6 +128,7 @@ export class SettingsComponent {
   private api = inject(ApiService);
   private settingsService = inject(SettingsService);
   private snackBar = inject(MatSnackBar);
+  uiSettings = inject(UiSettingsService);
 
   tab = signal('app');
   storageType = signal('file');

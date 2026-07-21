@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ProvidersService } from '../../core/services/providers.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProviderCreate } from '../../shared/models/provider.model';
@@ -22,107 +23,117 @@ import { ProviderCreate } from '../../shared/models/provider.model';
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSnackBarModule, MatTooltipModule,
-    EmptyStateComponent,
+    TranslatePipe, EmptyStateComponent,
   ],
   template: `
     <div class="header">
-      <h1 class="page-title mat-headline-4">Providers</h1>
-      <button mat-raised-button color="primary" (click)="showForm.set(true)" *ngIf="!showForm()">
-        <mat-icon>add</mat-icon> Add Provider
-      </button>
+      <h1 class="page-title mat-headline-4">{{ 'providers.title' | translate }}</h1>
+      @if (!showForm()) {
+        <button mat-raised-button color="primary" (click)="showForm.set(true)">
+          <mat-icon>add</mat-icon> {{ 'providers.add' | translate }}
+        </button>
+      }
     </div>
 
-    <mat-card *ngIf="showForm()" class="form-card">
-      <mat-card-content>
-        <h3>{{ editingId() ? 'Edit Provider' : 'New Provider' }}</h3>
-        <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Name</mat-label>
-            <input matInput [(ngModel)]="form.name" placeholder="My Bitbucket">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Type</mat-label>
-            <mat-select [(ngModel)]="form.type">
-              <mat-option value="bitbucket">Bitbucket</mat-option>
-              <mat-option value="gitlab">GitLab</mat-option>
-              <mat-option value="github">GitHub</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>API URL</mat-label>
-            <input matInput [(ngModel)]="form.apiUrl" placeholder="https://bitbucket.example.com">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Token / Password</mat-label>
-            <input matInput type="password" [(ngModel)]="form.token">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Default Target Branch</mat-label>
-            <input matInput [(ngModel)]="form.defaultTarget" placeholder="main">
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Default Title Prefix</mat-label>
-            <input matInput [(ngModel)]="form.defaultTitlePrefix" placeholder="Merge">
-          </mat-form-field>
-        </div>
-        <div class="form-actions">
-          <button mat-button (click)="cancelForm()">Cancel</button>
-          <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
-            {{ saving() ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    @if (showForm()) {
+      <mat-card class="form-card">
+        <mat-card-content>
+          <h3>{{ editingId() ? ('providers.edit' | translate) : ('providers.new' | translate) }}</h3>
+          <div class="form-grid">
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.name' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.name" placeholder="My Bitbucket">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.type' | translate }}</mat-label>
+              <mat-select [(ngModel)]="form.type">
+                <mat-option value="bitbucket">Bitbucket</mat-option>
+                <mat-option value="gitlab">GitLab</mat-option>
+                <mat-option value="github">GitHub</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.apiUrl" placeholder="https://bitbucket.example.com">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.token' | translate }}</mat-label>
+              <input matInput type="password" [(ngModel)]="form.token">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.defaultTarget' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.defaultTarget" placeholder="main">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'providers.defaultPrefix' | translate }}</mat-label>
+              <input matInput [(ngModel)]="form.defaultTitlePrefix" placeholder="Merge">
+            </mat-form-field>
+          </div>
+          <div class="form-actions">
+            <button mat-button (click)="cancelForm()">{{ 'providers.cancel' | translate }}</button>
+            <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
+              {{ saving() ? ('providers.saving' | translate) : ('providers.save' | translate) }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
 
     <mat-card>
       <mat-card-content>
-        <table mat-table [dataSource]="providers()" class="full-width" *ngIf="providers().length > 0">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let p">{{ p.name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef>Type</th>
-            <td mat-cell *matCellDef="let p">
-              <span class="type-badge" [class.bitbucket]="p.type==='bitbucket'" [class.gitlab]="p.type==='gitlab'" [class.github]="p.type==='github'">{{ p.type }}</span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="apiUrl">
-            <th mat-header-cell *matHeaderCellDef>API URL</th>
-            <td mat-cell *matCellDef="let p">{{ p.apiUrl }}</td>
-          </ng-container>
-          <ng-container matColumnDef="defaultTarget">
-            <th mat-header-cell *matHeaderCellDef>Target</th>
-            <td mat-cell *matCellDef="let p">{{ p.defaultTarget || 'main' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let p" class="actions-cell">
-              <button mat-icon-button (click)="testConnection(p)" matTooltip="Test Connection" [disabled]="testingId() === p.id">
-                <mat-icon>{{ testingId() === p.id ? 'hourglass_top' : 'wifi' }}</mat-icon>
-              </button>
-              <button mat-icon-button (click)="edit(p)" matTooltip="Edit">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteProvider(p)" matTooltip="Delete">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns;"></tr>
-        </table>
+        @if (providers().length > 0) {
+          <table mat-table [dataSource]="providers()" class="full-width">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>{{ 'providers.name' | translate }}</th>
+              <td mat-cell *matCellDef="let p">{{ p.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>{{ 'providers.type' | translate }}</th>
+              <td mat-cell *matCellDef="let p">
+                <span class="type-badge" [class.bitbucket]="p.type==='bitbucket'" [class.gitlab]="p.type==='gitlab'" [class.github]="p.type==='github'">{{ p.type }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="apiUrl">
+              <th mat-header-cell *matHeaderCellDef>{{ 'providers.apiUrl' | translate }}</th>
+              <td mat-cell *matCellDef="let p">{{ p.apiUrl }}</td>
+            </ng-container>
+            <ng-container matColumnDef="defaultTarget">
+              <th mat-header-cell *matHeaderCellDef>{{ 'providers.target' | translate }}</th>
+              <td mat-cell *matCellDef="let p">{{ p.defaultTarget || 'main' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let p" class="actions-cell">
+                <button mat-icon-button (click)="testConnection(p)" matTooltip="{{ 'providers.test' | translate }}" [disabled]="testingId() === p.id">
+                  <mat-icon>{{ testingId() === p.id ? 'hourglass_top' : 'wifi' }}</mat-icon>
+                </button>
+                <button mat-icon-button (click)="edit(p)" matTooltip="{{ 'providers.editAction' | translate }}">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteProvider(p)" matTooltip="{{ 'providers.delete' | translate }}">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+          </table>
+        }
 
-        <app-empty-state *ngIf="providers().length === 0" icon="cloud"
-          title="No providers configured"
-          description="Add a Git provider to start creating merge requests.">
-          <button mat-raised-button color="primary" (click)="showForm.set(true)">Add Provider</button>
-        </app-empty-state>
+        @if (providers().length === 0) {
+          <app-empty-state icon="cloud"
+            [title]="'providers.none' | translate"
+            [description]="'providers.addHint' | translate">
+            <button mat-raised-button color="primary" (click)="showForm.set(true)">{{ 'providers.add' | translate }}</button>
+          </app-empty-state>
+        }
 
-        <div *ngIf="testResult()" class="test-result" [class.success]="testResult()?.ok" [class.error]="!testResult()?.ok">
-          <mat-icon>{{ testResult()?.ok ? 'check_circle' : 'error' }}</mat-icon>
-          {{ testResult()?.message }}
-        </div>
+        @if (testResult()) {
+          <div class="test-result" [class.success]="testResult()?.ok" [class.error]="!testResult()?.ok">
+            <mat-icon>{{ testResult()?.ok ? 'check_circle' : 'error' }}</mat-icon>
+            {{ testResult()?.message }}
+          </div>
+        }
       </mat-card-content>
     </mat-card>
   `,

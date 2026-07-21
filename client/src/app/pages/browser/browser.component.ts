@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { GitBranch } from '../../shared/models/provider.model';
@@ -22,88 +23,101 @@ import { GitBranch } from '../../shared/models/provider.model';
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatTableModule, MatProgressBarModule, MatTooltipModule,
-    EmptyStateComponent,
+    TranslatePipe, EmptyStateComponent,
   ],
   template: `
     <div class="header">
-      <h1 class="page-title mat-headline-4">Browse Branches</h1>
+      <h1 class="page-title mat-headline-4">{{ 'browser.title' | translate }}</h1>
     </div>
 
     <mat-card class="search-card">
       <mat-card-content>
         <div class="search-grid">
           <mat-form-field appearance="fill">
-            <mat-label>Provider</mat-label>
+            <mat-label>{{ 'browser.provider' | translate }}</mat-label>
             <mat-select [(ngModel)]="selectedProviderId" (selectionChange)="clearResults()">
-              <mat-option [value]="">Select a provider</mat-option>
-              <mat-option *ngFor="let p of providers()" [value]="p.id">{{ p.name }} ({{ p.type }})</mat-option>
+              <mat-option [value]="">{{ 'browser.selectProvider' | translate }}</mat-option>
+              @for (p of providers(); track p.id) {
+                <mat-option [value]="p.id">{{ p.name }} ({{ p.type }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="fill">
-            <mat-label>Project</mat-label>
+            <mat-label>{{ 'browser.project' | translate }}</mat-label>
             <input matInput [(ngModel)]="project" placeholder="PROJ">
           </mat-form-field>
           <mat-form-field appearance="fill">
-            <mat-label>Repository</mat-label>
+            <mat-label>{{ 'browser.repository' | translate }}</mat-label>
             <input matInput [(ngModel)]="repo" placeholder="my-repo">
           </mat-form-field>
         </div>
         <div class="search-actions">
           <button mat-raised-button color="primary" (click)="loadBranches()"
             [disabled]="!selectedProviderId() || !project() || !repo() || loading()">
-            <mat-icon>account_tree</mat-icon> Load Branches
+            <mat-icon>account_tree</mat-icon> {{ 'browser.load' | translate }}
           </button>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-progress-bar *ngIf="loading()" mode="indeterminate" class="mb-16"></mat-progress-bar>
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" class="mb-16"></mat-progress-bar>
+    }
 
-    <div *ngIf="error()" class="error-banner">
-      <mat-icon>error</mat-icon> <span>{{ error() }}</span>
-    </div>
+    @if (error()) {
+      <div class="error-banner">
+        <mat-icon>error</mat-icon> <span>{{ error() }}</span>
+      </div>
+    }
 
-    <div class="branch-count" *ngIf="branches().length > 0">
-      {{ branches().length }} branch{{ branches().length !== 1 ? 'es' : '' }} found
-    </div>
+    @if (branches().length > 0) {
+      <div class="branch-count">
+        {{ branches().length }} {{ 'browser.found' | translate }}
+      </div>
+    }
 
-    <div class="table-container" *ngIf="branches().length > 0">
-      <table mat-table [dataSource]="branches()" class="branches-table">
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Branch</th>
-          <td mat-cell *matCellDef="let b">
-            <div class="branch-name">
-              <mat-icon class="branch-icon">call_split</mat-icon>
-              <span>{{ b.displayId || b.name }}</span>
-            </div>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="commit">
-          <th mat-header-cell *matHeaderCellDef>Latest Commit</th>
-          <td mat-cell *matCellDef="let b">
-            <code class="commit-hash">{{ (b.latestCommit || b.sha || '').substring(0, 8) }}</code>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="author">
-          <th mat-header-cell *matHeaderCellDef>Author</th>
-          <td mat-cell *matCellDef="let b">{{ b.author?.displayName || (b.author?.name || '-') }}</td>
-        </ng-container>
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Last Updated</th>
-          <td mat-cell *matCellDef="let b">{{ (b.commitDate || b.date || '') | date:'short' }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['name', 'commit', 'author', 'date']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['name', 'commit', 'author', 'date'];" class="branch-row"></tr>
-      </table>
-    </div>
+    @if (branches().length > 0) {
+      <div class="table-container">
+        <table mat-table [dataSource]="branches()" class="branches-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'browser.branch' | translate }}</th>
+            <td mat-cell *matCellDef="let b">
+              <div class="branch-name">
+                <mat-icon class="branch-icon">call_split</mat-icon>
+                <span>{{ b.displayId || b.name }}</span>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="commit">
+            <th mat-header-cell *matHeaderCellDef>{{ 'browser.latestCommit' | translate }}</th>
+            <td mat-cell *matCellDef="let b">
+              <code class="commit-hash">{{ (b.latestCommit || b.sha || '').substring(0, 8) }}</code>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="author">
+            <th mat-header-cell *matHeaderCellDef>{{ 'browser.author' | translate }}</th>
+            <td mat-cell *matCellDef="let b">{{ b.author?.displayName || (b.author?.name || '-') }}</td>
+          </ng-container>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>{{ 'browser.lastUpdated' | translate }}</th>
+            <td mat-cell *matCellDef="let b">{{ (b.commitDate || b.date || '') | date:'short' }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['name', 'commit', 'author', 'date']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['name', 'commit', 'author', 'date'];" class="branch-row"></tr>
+        </table>
+      </div>
+    }
 
-    <app-empty-state *ngIf="!loading() && !error() && loaded() && branches().length === 0"
-      icon="account_tree" title="No branches found"
-      description="No branches match your search criteria for the selected project and repository." />
+    @if (!loading() && !error() && loaded() && branches().length === 0) {
+      <app-empty-state icon="account_tree" [title]="'browser.none' | translate"
+        [description]="'browser.noneHint' | translate" />
+    }
 
-    <app-empty-state *ngIf="!loading() && !loaded()" icon="search"
-      title="Search branches"
-      description="Select a provider, enter project and repository name, then click Load Branches." />
+    @if (!loading() && !loaded()) {
+      <app-empty-state icon="search"
+        title="Search branches"
+        description="Select a provider, enter project and repository name, then click Load Branches." />
+    }
   `,
   styles: `
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }

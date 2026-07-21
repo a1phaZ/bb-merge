@@ -8,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
-import { HistoryService } from '../../core/services/history.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { TimeAgoPipe } from '../../shared/pipes/time-ago.pipe';
 
@@ -27,133 +27,147 @@ interface StatsEntry {
   imports: [
     CommonModule, RouterLink, FormsModule,
     MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatSelectModule,
-    EmptyStateComponent, TimeAgoPipe,
+    TranslatePipe, EmptyStateComponent, TimeAgoPipe,
   ],
   template: `
-    <h1 class="page-title mat-headline-4">Dashboard</h1>
+    <h1 class="page-title mat-headline-4">{{ 'dashboard.title' | translate }}</h1>
 
-    <div *ngIf="hasProviders(); else noProviders">
-      <div class="stats-grid">
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <mat-icon>merge</mat-icon>
-            <div class="stat-value">{{ totalMRs() }}</div>
-            <div class="stat-label">Total Merge Requests</div>
-          </mat-card-content>
-        </mat-card>
-        <mat-card class="stat-card merged">
-          <mat-card-content>
-            <mat-icon>check_circle</mat-icon>
-            <div class="stat-value">{{ totalMerged() }}</div>
-            <div class="stat-label">Merged</div>
-          </mat-card-content>
-        </mat-card>
-        <mat-card class="stat-card conflicted">
-          <mat-card-content>
-            <mat-icon>warning</mat-icon>
-            <div class="stat-value">{{ totalConflicts() }}</div>
-            <div class="stat-label">Conflicts</div>
-          </mat-card-content>
-        </mat-card>
-        <mat-card class="stat-card error">
-          <mat-card-content>
-            <mat-icon>error</mat-icon>
-            <div class="stat-value">{{ totalErrors() }}</div>
-            <div class="stat-label">Errors</div>
-          </mat-card-content>
-        </mat-card>
-      </div>
+    @if (hasProviders()) {
+      <div>
+        <div class="stats-grid">
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <mat-icon>merge</mat-icon>
+              <div class="stat-value">{{ totalMRs() }}</div>
+              <div class="stat-label">{{ 'dashboard.totalMRs' | translate }}</div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card merged">
+            <mat-card-content>
+              <mat-icon>check_circle</mat-icon>
+              <div class="stat-value">{{ totalMerged() }}</div>
+              <div class="stat-label">{{ 'dashboard.merged' | translate }}</div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card conflicted">
+            <mat-card-content>
+              <mat-icon>warning</mat-icon>
+              <div class="stat-value">{{ totalConflicts() }}</div>
+              <div class="stat-label">{{ 'dashboard.conflicts' | translate }}</div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card error">
+            <mat-card-content>
+              <mat-icon>error</mat-icon>
+              <div class="stat-value">{{ totalErrors() }}</div>
+              <div class="stat-label">{{ 'dashboard.errors' | translate }}</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
 
-      <mat-card class="chart-card" *ngIf="stats().length > 0">
-        <mat-card-header>
-          <mat-card-title>Trend</mat-card-title>
-          <mat-form-field appearance="fill" subscriptSizing="dynamic" class="days-select">
-            <mat-select [(ngModel)]="selectedDays" (ngModelChange)="loadStats()">
-              <mat-option [value]="7">7 days</mat-option>
-              <mat-option [value]="14">14 days</mat-option>
-              <mat-option [value]="30">30 days</mat-option>
-              <mat-option [value]="90">90 days</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="chart-container">
-            <div class="chart-y-labels">
-              <span>{{ maxVal() }}</span>
-              <span>{{ halfVal() }}</span>
-              <span>0</span>
-            </div>
-            <div class="chart-bars">
-              <div class="bar-column" *ngFor="let day of stats()">
-                <div class="bar-stack" [style.height]="barHeight(day)">
-                  <div class="bar merged" [style.height.%]="pct(day.merged, maxVal())" [title]="day.date + ' merged: ' + day.merged"></div>
-                  <div class="bar conflicts" [style.height.%]="pct(day.conflicts, maxVal())" [title]="day.date + ' conflicts: ' + day.conflicts"></div>
-                  <div class="bar errors" [style.height.%]="pct(day.errors, maxVal())" [title]="day.date + ' errors: ' + day.errors"></div>
+        @if (stats().length > 0) {
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>{{ 'dashboard.trend' | translate }}</mat-card-title>
+              <mat-form-field appearance="fill" subscriptSizing="dynamic" class="days-select">
+                <mat-select [(ngModel)]="selectedDays" (ngModelChange)="loadStats()">
+                  <mat-option [value]="7">{{ 'dashboard.7days' | translate }}</mat-option>
+                  <mat-option [value]="14">{{ 'dashboard.14days' | translate }}</mat-option>
+                  <mat-option [value]="30">{{ 'dashboard.30days' | translate }}</mat-option>
+                  <mat-option [value]="90">{{ 'dashboard.90days' | translate }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-container">
+                <div class="chart-y-labels">
+                  <span>{{ maxVal() }}</span>
+                  <span>{{ halfVal() }}</span>
+                  <span>0</span>
                 </div>
-                <span class="bar-label">{{ day.date.slice(5) }}</span>
+                <div class="chart-bars">
+                  @for (day of stats(); track day.date) {
+                    <div class="bar-column">
+                      <div class="bar-stack" [style.height]="barHeight(day)">
+                        <div class="bar merged" [style.height.%]="pct(day.merged, maxVal())" [title]="day.date + ' merged: ' + day.merged"></div>
+                        <div class="bar conflicts" [style.height.%]="pct(day.conflicts, maxVal())" [title]="day.date + ' conflicts: ' + day.conflicts"></div>
+                        <div class="bar errors" [style.height.%]="pct(day.errors, maxVal())" [title]="day.date + ' errors: ' + day.errors"></div>
+                      </div>
+                      <span class="bar-label">{{ day.date.slice(5) }}</span>
+                    </div>
+                  }
+                </div>
               </div>
-            </div>
-          </div>
-          <div class="chart-legend">
-            <span><span class="legend-dot merged"></span> Merged</span>
-            <span><span class="legend-dot conflicts"></span> Conflicts</span>
-            <span><span class="legend-dot errors"></span> Errors</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
+              <div class="chart-legend">
+                <span><span class="legend-dot merged"></span> {{ 'dashboard.merged' | translate }}</span>
+                <span><span class="legend-dot conflicts"></span> {{ 'dashboard.conflicts' | translate }}</span>
+                <span><span class="legend-dot errors"></span> {{ 'dashboard.errors' | translate }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
 
-      <div class="dashboard-grid">
-        <mat-card>
-          <mat-card-header><mat-card-title>Recent Operations</mat-card-title></mat-card-header>
-          <mat-card-content>
-            <mat-list *ngIf="recent().length > 0">
-              <mat-list-item *ngFor="let r of recent()">
-                <mat-icon matListItemIcon>{{ r.errorsCount > 0 ? 'error' : 'check_circle' }}</mat-icon>
-                <span matListItemTitle>{{ r.project }}/{{ r.repo }} → {{ r.target }}</span>
-                <span matListItemLine>{{ r.createdAt | timeAgo }} · {{ r.totalBranches }} branches · {{ r.mergedCount }} merged</span>
-              </mat-list-item>
-            </mat-list>
-            <p *ngIf="recent().length === 0" class="empty-note">No operations yet.</p>
-          </mat-card-content>
-        </mat-card>
+        <div class="dashboard-grid">
+          <mat-card>
+            <mat-card-header><mat-card-title>{{ 'dashboard.recentOps' | translate }}</mat-card-title></mat-card-header>
+            <mat-card-content>
+              @if (recent().length > 0) {
+                <mat-list>
+                  @for (r of recent(); track r.id) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>{{ r.errorsCount > 0 ? 'error' : 'check_circle' }}</mat-icon>
+                      <span matListItemTitle>{{ r.project }}/{{ r.repo }} → {{ r.target }}</span>
+                      <span matListItemLine>{{ r.createdAt | timeAgo }} · {{ r.totalBranches }} {{ 'templates.count' | translate }} · {{ r.mergedCount }} {{ 'dashboard.merged' | translate | lowercase }}</span>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              }
+              @if (recent().length === 0) {
+                <p class="empty-note">{{ 'dashboard.noOps' | translate }}</p>
+              }
+            </mat-card-content>
+          </mat-card>
 
-        <mat-card>
-          <mat-card-header><mat-card-title>Providers</mat-card-title></mat-card-header>
-          <mat-card-content>
-            <mat-list>
-              <mat-list-item *ngFor="let p of providers()">
-                <mat-icon matListItemIcon [style.color]="'#2e7d32'">check_circle</mat-icon>
-                <span matListItemTitle>{{ p.name }}</span>
-                <span matListItemLine>{{ p.type }} · {{ p.apiUrl }}</span>
-              </mat-list-item>
-            </mat-list>
-            <p *ngIf="providers().length === 0" class="empty-note">No providers configured.</p>
-          </mat-card-content>
-        </mat-card>
+          <mat-card>
+            <mat-card-header><mat-card-title>{{ 'dashboard.providers' | translate }}</mat-card-title></mat-card-header>
+            <mat-card-content>
+              <mat-list>
+                @for (p of providers(); track p.id) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon [style.color]="'#2e7d32'">check_circle</mat-icon>
+                    <span matListItemTitle>{{ p.name }}</span>
+                    <span matListItemLine>{{ p.type }} · {{ p.apiUrl }}</span>
+                  </mat-list-item>
+                }
+              </mat-list>
+              @if (providers().length === 0) {
+                <p class="empty-note">{{ 'dashboard.noProviders' | translate }}</p>
+              }
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="quick-actions">
+          <button mat-raised-button color="primary" routerLink="/merge-request/new">
+            <mat-icon>add</mat-icon> {{ 'dashboard.newMr' | translate }}
+          </button>
+          <button mat-raised-button routerLink="/browser">
+            <mat-icon>account_tree</mat-icon> {{ 'dashboard.browse' | translate }}
+          </button>
+          <button mat-stroked-button routerLink="/history">
+            <mat-icon>history</mat-icon> {{ 'dashboard.history' | translate }}
+          </button>
+          <button mat-stroked-button routerLink="/providers">
+            <mat-icon>cloud</mat-icon> {{ 'dashboard.manageProviders' | translate }}
+          </button>
+        </div>
       </div>
-
-      <div class="quick-actions">
-        <button mat-raised-button color="primary" routerLink="/merge-request/new">
-          <mat-icon>add</mat-icon> New Merge Request
-        </button>
-        <button mat-raised-button routerLink="/browser">
-          <mat-icon>account_tree</mat-icon> Browse Branches
-        </button>
-        <button mat-stroked-button routerLink="/history">
-          <mat-icon>history</mat-icon> View History
-        </button>
-        <button mat-stroked-button routerLink="/providers">
-          <mat-icon>cloud</mat-icon> Manage Providers
-        </button>
-      </div>
-    </div>
-
-    <ng-template #noProviders>
-      <app-empty-state icon="cloud" title="Welcome to Merge Request Creator"
-        description="Add your first Git provider to start creating merge requests.">
-        <button mat-raised-button color="primary" routerLink="/providers">Add Provider</button>
+    } @else {
+      <app-empty-state icon="cloud" [title]="'dashboard.welcome' | translate"
+        [description]="'dashboard.addProviderHint' | translate">
+        <button mat-raised-button color="primary" routerLink="/providers">{{ 'dashboard.addProvider' | translate }}</button>
       </app-empty-state>
-    </ng-template>
+    }
   `,
   styles: `
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }

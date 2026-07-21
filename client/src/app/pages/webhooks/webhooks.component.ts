@@ -8,6 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { TranslatePipe } from '@ngx-translate/core';
 import { WebhooksService } from '../../core/services/webhooks.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 
@@ -27,72 +28,83 @@ export interface WebhookEvent {
     MatCardModule, MatButtonModule, MatIconModule,
     MatTableModule, MatProgressBarModule, MatTooltipModule,
     MatSnackBarModule,
-    EmptyStateComponent,
+    TranslatePipe, EmptyStateComponent,
   ],
   template: `
     <div class="header">
-      <h1 class="page-title mat-headline-4">Webhooks</h1>
-      <div class="header-actions" *ngIf="events().length > 0">
-        <button mat-stroked-button (click)="refresh()" matTooltip="Refresh events">
-          <mat-icon>refresh</mat-icon>
-        </button>
-        <button mat-stroked-button color="warn" (click)="clearAll()" matTooltip="Clear all events">
-          <mat-icon>delete_sweep</mat-icon> Clear All
-        </button>
+      <h1 class="page-title mat-headline-4">{{ 'webhooks.title' | translate }}</h1>
+      @if (events().length > 0) {
+        <div class="header-actions">
+          <button mat-stroked-button (click)="refresh()" matTooltip="{{ 'webhooks.refresh' | translate }}">
+            <mat-icon>refresh</mat-icon>
+          </button>
+          <button mat-stroked-button color="warn" (click)="clearAll()" matTooltip="{{ 'webhooks.clearAll' | translate }}">
+            <mat-icon>delete_sweep</mat-icon> {{ 'webhooks.clearAllBtn' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" class="mb-16"></mat-progress-bar>
+    }
+
+    @if (error()) {
+      <div class="error-banner">
+        <mat-icon>error</mat-icon> <span>{{ error() }}</span>
       </div>
-    </div>
+    }
 
-    <mat-progress-bar *ngIf="loading()" mode="indeterminate" class="mb-16"></mat-progress-bar>
+    @if (events().length > 0 && !loading()) {
+      <div class="table-container">
+        <table mat-table [dataSource]="events()" multiTemplateDataRows class="events-table">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>{{ 'webhooks.id' | translate }}</th>
+            <td mat-cell *matCellDef="let e">{{ e.id }}</td>
+          </ng-container>
+          <ng-container matColumnDef="eventType">
+            <th mat-header-cell *matHeaderCellDef>{{ 'webhooks.eventType' | translate }}</th>
+            <td mat-cell *matCellDef="let e">
+              <span class="event-badge">{{ e.eventType }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="providerId">
+            <th mat-header-cell *matHeaderCellDef>{{ 'webhooks.provider' | translate }}</th>
+            <td mat-cell *matCellDef="let e">{{ e.providerId }}</td>
+          </ng-container>
+          <ng-container matColumnDef="receivedAt">
+            <th mat-header-cell *matHeaderCellDef>{{ 'webhooks.received' | translate }}</th>
+            <td mat-cell *matCellDef="let e">{{ e.receivedAt | date:'medium' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="expand">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let e">
+              <button mat-icon-button (click)="togglePayload(e)">
+                <mat-icon>{{ expandedEventId() === e.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="expandedDetail">
+            <td mat-cell *matCellDef="let e" [attr.colspan]="5">
+              @if (expandedEventId() === e.id) {
+                <div class="payload-detail">
+                  <pre>{{ formatPayload(e.payloadJson) }}</pre>
+                </div>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['id', 'eventType', 'providerId', 'receivedAt', 'expand']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['id', 'eventType', 'providerId', 'receivedAt', 'expand']"
+              class="event-row" (click)="togglePayload(row)"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+        </table>
+      </div>
+    }
 
-    <div *ngIf="error()" class="error-banner">
-      <mat-icon>error</mat-icon> <span>{{ error() }}</span>
-    </div>
-
-    <div class="table-container" *ngIf="events().length > 0 && !loading()">
-      <table mat-table [dataSource]="events()" multiTemplateDataRows class="events-table">
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef>ID</th>
-          <td mat-cell *matCellDef="let e">{{ e.id }}</td>
-        </ng-container>
-        <ng-container matColumnDef="eventType">
-          <th mat-header-cell *matHeaderCellDef>Event Type</th>
-          <td mat-cell *matCellDef="let e">
-            <span class="event-badge">{{ e.eventType }}</span>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="providerId">
-          <th mat-header-cell *matHeaderCellDef>Provider</th>
-          <td mat-cell *matCellDef="let e">{{ e.providerId }}</td>
-        </ng-container>
-        <ng-container matColumnDef="receivedAt">
-          <th mat-header-cell *matHeaderCellDef>Received</th>
-          <td mat-cell *matCellDef="let e">{{ e.receivedAt | date:'medium' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="expand">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let e">
-            <button mat-icon-button (click)="togglePayload(e)">
-              <mat-icon>{{ expandedEventId() === e.id ? 'expand_less' : 'expand_more' }}</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="expandedDetail">
-          <td mat-cell *matCellDef="let e" [attr.colspan]="5">
-            <div class="payload-detail" *ngIf="expandedEventId() === e.id">
-              <pre>{{ formatPayload(e.payloadJson) }}</pre>
-            </div>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['id', 'eventType', 'providerId', 'receivedAt', 'expand']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['id', 'eventType', 'providerId', 'receivedAt', 'expand']"
-            class="event-row" (click)="togglePayload(row)"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
-      </table>
-    </div>
-
-    <app-empty-state *ngIf="!loading() && events().length === 0"
-      icon="webhook" title="No webhook events"
-      description="Webhook events received from Git providers will appear here. Configure webhooks in your Git provider settings to point to your server." />
+    @if (!loading() && events().length === 0) {
+      <app-empty-state icon="webhook" [title]="'webhooks.none' | translate"
+        [description]="'webhooks.noneHint' | translate" />
+    }
   `,
   styles: `
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }

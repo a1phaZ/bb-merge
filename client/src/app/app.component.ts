@@ -7,6 +7,8 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslatePipe } from '@ngx-translate/core';
+import { UiSettingsService } from './core/services/ui-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     RouterOutlet, RouterLink, RouterLinkActive,
     MatToolbarModule, MatSidenavModule, MatListModule,
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule,
+    TranslatePipe,
   ],
   template: `
     <mat-toolbar color="primary">
@@ -23,7 +26,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
       </button>
       <span>Merge Request Creator</span>
       <span class="spacer"></span>
-      <button mat-icon-button routerLink="/settings" matTooltip="Settings">
+      <button mat-icon-button routerLink="/settings" matTooltip="{{ 'nav.settings' | translate }}">
         <mat-icon>settings</mat-icon>
       </button>
     </mat-toolbar>
@@ -34,58 +37,58 @@ import { MatTooltipModule } from '@angular/material/tooltip';
           <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>dashboard</mat-icon>
-            <span matListItemTitle>Dashboard</span>
+            <span matListItemTitle>{{ 'nav.dashboard' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/providers" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>cloud</mat-icon>
-            <span matListItemTitle>Providers</span>
+            <span matListItemTitle>{{ 'nav.providers' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/merge-request/new" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>merge</mat-icon>
-            <span matListItemTitle>New Merge Request</span>
+            <span matListItemTitle>{{ 'nav.newMr' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/history" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>history</mat-icon>
-            <span matListItemTitle>History</span>
+            <span matListItemTitle>{{ 'nav.history' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/templates" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>description</mat-icon>
-            <span matListItemTitle>Templates</span>
+            <span matListItemTitle>{{ 'nav.templates' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/browser" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>account_tree</mat-icon>
-            <span matListItemTitle>Browse Branches</span>
+            <span matListItemTitle>{{ 'nav.browser' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/webhooks" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>webhook</mat-icon>
-            <span matListItemTitle>Webhooks</span>
+            <span matListItemTitle>{{ 'nav.webhooks' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/logs" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>terminal</mat-icon>
-            <span matListItemTitle>Logs</span>
+            <span matListItemTitle>{{ 'nav.logs' | translate }}</span>
           </a>
           <mat-divider></mat-divider>
           <a mat-list-item routerLink="/scheduler" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>schedule</mat-icon>
-            <span matListItemTitle>Scheduler</span>
+            <span matListItemTitle>{{ 'nav.scheduler' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/admin/users" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>people</mat-icon>
-            <span matListItemTitle>Users</span>
+            <span matListItemTitle>{{ 'nav.users' | translate }}</span>
           </a>
           <a mat-list-item routerLink="/settings" routerLinkActive="active-link"
              (click)="drawerOpen.set(false)">
             <mat-icon matListItemIcon>settings</mat-icon>
-            <span matListItemTitle>Settings</span>
+            <span matListItemTitle>{{ 'nav.settings' | translate }}</span>
           </a>
         </mat-nav-list>
       </mat-drawer>
@@ -109,6 +112,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 })
 export class AppComponent {
   drawerOpen = signal(true);
+  private uiSettings = inject(UiSettingsService);
 
   constructor() {
     inject(MatIconRegistry).setDefaultFontSetClass('material-icons-outlined');
