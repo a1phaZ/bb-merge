@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +24,7 @@ import { debounceTime, Subject } from 'rxjs';
   selector: 'app-history',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, RouterLink,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatPaginatorModule, MatSnackBarModule, MatTooltipModule,
@@ -126,6 +127,11 @@ import { debounceTime, Subject } from 'rxjs';
                   <div class="stat"><span class="orange">●</span> Conflicts: {{ detail()?.conflictsCount }}</div>
                   <div class="stat"><span class="gray">●</span> Skipped: {{ detail()?.skippedCount }}</div>
                 </div>
+                <div class="detail-actions">
+                  <button mat-stroked-button (click)="rerun(detail()!)" matTooltip="Re-run this merge request configuration">
+                    <mat-icon>replay</mat-icon> Rerun
+                  </button>
+                </div>
               </div>
             </td>
           </tr>
@@ -164,6 +170,7 @@ export class HistoryComponent {
   private historyService = inject(HistoryService);
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   page = signal(0);
   limit = signal(50);
@@ -229,5 +236,9 @@ export class HistoryComponent {
       this.items.set([]);
       this.snackBar.open('History cleared', 'Close', { duration: 2000 });
     });
+  }
+
+  rerun(record: HistoryRecord) {
+    this.router.navigate(['/merge-request/new'], { state: { config: record } });
   }
 }

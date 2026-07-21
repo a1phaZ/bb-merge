@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +15,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { TemplatesService } from '../../core/services/templates.service';
+import { HistoryRecord } from '../../shared/models/history.model';
 import { ProgressEvent } from '../../shared/models/merge-result.model';
 import { Subscription } from 'rxjs';
 
@@ -208,6 +210,7 @@ export class MergeRequestNewComponent {
   private mrService = inject(MergeRequestService);
   private templatesService = inject(TemplatesService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   step = signal<'form' | 'progress'>('form');
   executing = signal(false);
@@ -219,6 +222,32 @@ export class MergeRequestNewComponent {
   loadingBranches = signal(false);
 
   providers = computed(() => this.api.providers.value() ?? []);
+
+  constructor() {
+    const nav = this.router.getCurrentNavigation();
+    const config = (nav?.extras?.state as any)?.['config'] as HistoryRecord | undefined;
+    if (config) {
+      this.form.providerId = config.providerId || '';
+      this.form.project = config.project || '';
+      this.form.repo = config.repo || '';
+      this.form.target = config.target || 'main';
+      this.form.titlePrefix = config.titlePrefix || 'Merge';
+      this.form.description = config.description || '';
+      this.form.autoMerge = config.autoMerge || false;
+      this.form.strategy = config.strategy || 'merge';
+      if (config.resultsJson) {
+        try {
+          const branches = JSON.parse(config.resultsJson);
+          if (Array.isArray(branches)) {
+            this.branchesText = branches.join('\n');
+          }
+        } catch { }
+      }
+      setTimeout(() =>
+        this.snackBar.open('Configuration loaded from history', 'Close', { duration: 3000 })
+      );
+    }
+  }
 
   form = {
     providerId: '',
