@@ -419,11 +419,11 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Cards view: название, провайдер, project/repo, target, кол-во branches | 🟡 План |
-| CRUD: создание, редактирование, удаление с подтверждением | 🟡 План |
-| Кнопка "Use Template" → предзаполнение формы New MR | 🟡 План |
-| Export template → JSON/YAML файл | 🟡 План |
-| Import template → загрузка JSON/YAML | 🟡 План |
+| Cards view: название, провайдер, project/repo, target, кол-во branches | 🟢 Готово |
+| CRUD: создание, редактирование, удаление с подтверждением | 🟢 Готово |
+| Кнопка "Use Template" → ссылка на New MR с queryParams | 🟢 Готово |
+| Export template → JSON файл | 🟢 Готово |
+| Import template → загрузка JSON | 🟢 Готово |
 
 ---
 
