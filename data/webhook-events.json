@@ -1,8 +1,0 @@
-[
-  {
-    "providerId": "test-1",
-    "eventType": "pr:merged",
-    "payloadJson": "{\"id\":1}",
-    "receivedAt": "2026-07-21T09:04:24.355Z"
-  }
-]
