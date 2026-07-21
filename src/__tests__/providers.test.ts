@@ -16,17 +16,19 @@ vi.mock('../storage/factory', () => {
   };
 });
 
+let mockProviderClient: any = {
+  testConnection: vi.fn().mockResolvedValue({ ok: true }),
+  listBranches: vi.fn().mockResolvedValue([
+    { name: 'main', sha: 'abc123' },
+    { name: 'feature/test', sha: 'def456' },
+    { name: 'develop', sha: 'ghi789' },
+  ]),
+};
+
 vi.mock('../providers/factory', () => ({
   ProviderFactory: {
     register: vi.fn(),
-    create: vi.fn().mockReturnValue({
-      testConnection: vi.fn().mockResolvedValue({ ok: true }),
-      listBranches: vi.fn().mockResolvedValue([
-        { name: 'main', sha: 'abc123' },
-        { name: 'feature/test', sha: 'def456' },
-        { name: 'develop', sha: 'ghi789' },
-      ]),
-    }),
+    create: vi.fn().mockImplementation(() => mockProviderClient),
   },
 }));
 
@@ -178,5 +180,32 @@ describe('GET /api/v1/providers/:id/branches', () => {
 
     const res = await request(app).get(`/api/v1/providers/${id}/branches`);
     expect(res.status).toBe(400);
+  });
+
+  it('returns 404 for unknown provider', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .get('/api/v1/providers/unknown/branches?project=PROJ&repo=repo');
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 502 when upstream provider fails', async () => {
+    mockProviderClient.listBranches = vi.fn().mockRejectedValue(new Error('Upstream error'));
+
+    const app = createApp();
+    const create = await request(app)
+      .post('/api/v1/providers')
+      .send({ name: 'Failing', type: 'bitbucket', apiUrl: 'https://bb.example.com', token: 'token' });
+    const id = create.body.id;
+
+    const res = await request(app)
+      .get(`/api/v1/providers/${id}/branches?project=PROJ&repo=repo`);
+    expect(res.status).toBe(502);
+
+    mockProviderClient.listBranches = vi.fn().mockResolvedValue([
+      { name: 'main', sha: 'abc123' },
+      { name: 'feature/test', sha: 'def456' },
+      { name: 'develop', sha: 'ghi789' },
+    ]);
   });
 });
