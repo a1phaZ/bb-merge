@@ -22,6 +22,8 @@ interface MergeRequestBody {
   strategy?: string;
   sessionId?: string;
   dryRun?: boolean;
+  webhookUrl?: string;
+  webhookEvents?: string[];
 }
 
 const router = Router();
@@ -151,6 +153,15 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
         addProgressEvent(sessionId, { type: 'info', message: 'Dry run completed. Switch to real mode to create merge requests.' });
         finishProgress(sessionId);
         return;
+      }
+
+      if (body.webhookUrl) {
+        try {
+          await client.registerWebhook(body.project, body.repo, body.webhookUrl, body.webhookEvents || []);
+          addProgressEvent(sessionId, { type: 'success', message: 'Webhook registered' });
+        } catch (err: any) {
+          addProgressEvent(sessionId, { type: 'warning', message: `Webhook registration failed: ${err.message}` });
+        }
       }
 
       await storage.saveHistory({

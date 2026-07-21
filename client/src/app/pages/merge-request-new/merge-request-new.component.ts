@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { ProgressEvent } from '../../shared/models/merge-result.model';
@@ -22,7 +23,7 @@ import { Subscription } from 'rxjs';
     CommonModule, FormsModule,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule,
+    MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule, MatExpansionModule,
   ],
   template: `
     <h1 class="page-title mat-headline-4">New Merge Request</h1>
@@ -89,6 +90,24 @@ import { Subscription } from 'rxjs';
           <div class="toggle-row mt-16">
             <mat-slide-toggle [(ngModel)]="form.dryRun">Dry run (validate only, no changes)</mat-slide-toggle>
           </div>
+
+          <mat-accordion class="mt-16">
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>Webhook</mat-panel-title>
+                <mat-panel-description>Register a webhook after creation</mat-panel-description>
+              </mat-expansion-panel-header>
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Webhook URL</mat-label>
+                <input matInput [(ngModel)]="form.webhookUrl" placeholder="https://hooks.example.com/webhook">
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Events</mat-label>
+                <input matInput [(ngModel)]="webhookEventsText" placeholder="pr:merged, pr:updated">
+                <mat-hint>Comma-separated event types</mat-hint>
+              </mat-form-field>
+            </mat-expansion-panel>
+          </mat-accordion>
 
           <div class="form-actions mt-16">
             <button mat-raised-button [color]="form.dryRun ? 'accent' : 'primary'" (click)="execute()"
@@ -165,6 +184,7 @@ export class MergeRequestNewComponent {
   events = signal<ProgressEvent[]>([]);
   progressDone = signal(false);
   branchesText = '';
+  webhookEventsText = '';
 
   providers = computed(() => this.api.providers.value() ?? []);
 
@@ -178,6 +198,8 @@ export class MergeRequestNewComponent {
     autoMerge: false,
     strategy: 'merge',
     dryRun: false,
+    webhookUrl: '',
+    webhookEvents: [] as string[],
   };
 
   private sub: Subscription | null = null;
@@ -206,7 +228,11 @@ export class MergeRequestNewComponent {
     this.events.set([]);
     this.progressDone.set(false);
 
-    this.mrService.create({ ...this.form, branches }).subscribe({
+    const webhookEvents = this.webhookEventsText.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    this.form.webhookEvents = webhookEvents;
+    const body = { ...this.form, branches, webhookEvents: webhookEvents.length > 0 ? webhookEvents : undefined };
+
+    this.mrService.create(body).subscribe({
       next: (res) => {
         this.executing.set(false);
         this.sub = this.mrService.watchProgress(res.sessionId).subscribe({
@@ -242,8 +268,9 @@ export class MergeRequestNewComponent {
     this.step.set('form');
     this.events.set([]);
     this.progressDone.set(false);
-    this.form = { providerId: '', project: '', repo: '', target: 'main', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge', dryRun: false };
+    this.form = { providerId: '', project: '', repo: '', target: 'main', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge', dryRun: false, webhookUrl: '', webhookEvents: [] };
     this.branchesText = '';
+    this.webhookEventsText = '';
   }
 
   eventIcon(type: string): string {

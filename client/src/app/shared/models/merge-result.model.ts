@@ -10,6 +10,8 @@ export interface MergeRequestCreate {
   strategy?: string;
   sessionId?: string;
   dryRun?: boolean;
+  webhookUrl?: string;
+  webhookEvents?: string[];
 }
 
 export interface MergeRequestResponse {
