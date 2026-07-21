@@ -315,15 +315,23 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| `CacheService` — in-memory кеш с TTL 10 минут | 🟡 План |
-| `ApiService` — базовый сервис на rxResource | 🟡 План |
-| `ErrorInterceptor` — глобальная обработка ошибок HTTP | 🟡 План |
-| Сервисы для каждой сущности: Providers, MergeRequest, History, Templates, Logs, Webhooks, Settings | 🟡 План |
+| `CacheService` — in-memory кеш с TTL 10 минут | 🟢 Готово |
+| `ApiService` — базовый сервис на rxResource | 🟢 Готово |
+| `ErrorInterceptor` — глобальная обработка ошибок HTTP | 🟢 Готово |
+| Сервисы для каждой сущности: Providers, MergeRequest, History, Templates, Logs, Webhooks, Settings | 🟢 Готово |
 
 **Ключевые файлы:**
 - `client/src/app/core/cache/cache.service.ts`
 - `client/src/app/core/services/api.service.ts`
 - `client/src/app/core/interceptors/error.interceptor.ts`
+- `client/src/app/core/services/providers.service.ts`
+- `client/src/app/core/services/merge-request.service.ts`
+- `client/src/app/core/services/history.service.ts`
+- `client/src/app/core/services/templates.service.ts`
+- `client/src/app/core/services/logs.service.ts`
+- `client/src/app/core/services/webhooks.service.ts`
+- `client/src/app/core/services/settings.service.ts`
+- `client/src/app/shared/pipes/time-ago.pipe.ts`
 
 ---
 
