@@ -1,12 +1,30 @@
 import { Router } from 'express';
 import healthRouter from './health';
 import mergeRequestsRouter from './merge-requests';
+import mergeRequestsV2Router from './merge-requests-v2';
 import webhooksRouter from './webhooks';
+import providersRouter from './providers';
+import historyRouter from './history';
+import templatesRouter from './templates';
+import logsRouter from './logs';
+import settingsRouter from './settings';
+import progressRouter from './progress';
+
+const v1Router = Router();
+
+v1Router.use('/merge-requests', mergeRequestsV2Router);
+v1Router.use('/providers', providersRouter);
+v1Router.use('/history', historyRouter);
+v1Router.use('/templates', templatesRouter);
+v1Router.use('/logs', logsRouter);
+v1Router.use('/settings', settingsRouter);
+v1Router.use('/progress', progressRouter);
 
 const apiRouter = Router();
 
 apiRouter.use('/merge-requests', mergeRequestsRouter);
 apiRouter.use('/webhooks', webhooksRouter);
+apiRouter.use('/v1', v1Router);
 
 const router = Router();
 
