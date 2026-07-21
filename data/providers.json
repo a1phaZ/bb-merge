@@ -1,0 +1,29 @@
+[
+  {
+    "id": "test-1",
+    "name": "Test Provider",
+    "type": "bitbucket",
+    "apiUrl": "https://bitbucket.example.com",
+    "token": "eb5de5e3ad3a5569da57921835387fb8:5bd98249b1020e00b4825a414a4b297e:658932eb6e283a66b157",
+    "createdAt": "2026-07-21T09:04:24.055Z",
+    "updatedAt": "2026-07-21T09:04:24.055Z"
+  },
+  {
+    "id": "test-2",
+    "name": "Test Provider 2",
+    "type": "gitlab",
+    "apiUrl": "https://gitlab.example.com",
+    "token": "0a4192eddf9dba1576ad5a4a8d2f8772:b2bee5d51eefc189b959bae15566c40a:9771b2b1ccf8a7b31f3a2a9d88f2edbb7559",
+    "createdAt": "2026-07-21T09:04:24.132Z",
+    "updatedAt": "2026-07-21T09:04:24.132Z"
+  },
+  {
+    "id": "test-3",
+    "name": "To Delete",
+    "type": "bitbucket",
+    "apiUrl": "https://example.com",
+    "token": "412dbecece7c221e0f88ff9bc7f49880:a0d67b41c8b67e419dc466b3e03f5ba8:41881a8c37",
+    "createdAt": "2026-07-21T09:04:24.209Z",
+    "updatedAt": "2026-07-21T09:04:24.209Z"
+  }
+]
