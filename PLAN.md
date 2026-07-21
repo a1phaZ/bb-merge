@@ -1064,6 +1064,7 @@ SLACK_WEBHOOK_URL=
 4. Создать `src/middleware/error-handler.ts`
 5. Создать `src/middleware/cors.ts`
 6. Обновить `src/routes/health.ts`
+7. SPA fallback `app.get('*', serveIndexHTML)` после API-роутов в `app.ts`
 
 ### Этап 1 — Angular scaffold
 
