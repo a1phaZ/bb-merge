@@ -18,6 +18,11 @@ interface ProgressSession {
 
 const sessions = new Map<string, ProgressSession>();
 
+function removeClient(session: ProgressSession, client: Response) {
+  const idx = session.clients.indexOf(client);
+  if (idx >= 0) session.clients.splice(idx, 1);
+}
+
 export function getOrCreateSession(sessionId?: string): ProgressSession {
   const id = sessionId || uuid();
   if (!sessions.has(id)) {
@@ -35,14 +40,16 @@ export function addProgressEvent(sessionId: string, event: Omit<ProgressEvent, '
 
   const data = JSON.stringify(full);
   for (const client of session.clients) {
-    client.write(`data: ${data}\n\n`);
+    try { client.write(`data: ${data}\n\n`); } catch { removeClient(session, client); }
   }
 
   if (event.type === 'error') {
     session.done = true;
     for (const client of session.clients) {
-      client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
-      client.end();
+      try {
+        client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+        client.end();
+      } catch { removeClient(session, client); }
     }
   }
 }
@@ -53,8 +60,10 @@ export function finishProgress(sessionId: string) {
 
   session.done = true;
   for (const client of session.clients) {
-    client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
-    client.end();
+    try {
+      client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+      client.end();
+    } catch { removeClient(session, client); }
   }
 
   setTimeout(() => sessions.delete(sessionId), 60_000);
@@ -72,22 +81,26 @@ router.get('/:sessionId', (req: Request, res: Response) => {
     'X-Accel-Buffering': 'no',
   });
 
-  for (const event of session.events) {
-    res.write(`data: ${JSON.stringify(event)}\n\n`);
-  }
+  try {
+    for (const event of session.events) {
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
+    }
 
-  if (session.done) {
-    res.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+    if (session.done) {
+      res.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+      res.end();
+      return;
+    }
+
+    session.clients.push(res);
+
+    res.on('close', () => {
+      const idx = session.clients.indexOf(res);
+      if (idx >= 0) session.clients.splice(idx, 1);
+    });
+  } catch {
     res.end();
-    return;
   }
-
-  session.clients.push(res);
-
-  res.on('close', () => {
-    const idx = session.clients.indexOf(res);
-    if (idx >= 0) session.clients.splice(idx, 1);
-  });
 });
 
 export default router;
