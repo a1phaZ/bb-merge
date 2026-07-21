@@ -388,12 +388,12 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Stats cards: всего PR, merged, conflicts, errors | 🟡 План |
+| Stats cards: всего PR, merged, conflicts, errors | 🟢 Готово |
 | Chart: PR по дням/неделям (ngx-charts) | 🟡 План |
-| Recent operations: последние 5 записей истории | 🟡 План |
-| Providers status: список провайдеров с индикатором (🟢 / 🔴) | 🟡 План |
-| Quick actions: "New MR", "Browse Branches", "View History" | 🟡 План |
-| Empty state: нет провайдеров → кнопка "Add Provider" | 🟡 План |
+| Recent operations: последние 5 записей истории | 🟢 Готово |
+| Providers status: список провайдеров с индикатором | 🟢 Готово |
+| Quick actions: "New MR", "Browse Branches", "View History" | 🟢 Готово |
+| Empty state: нет провайдеров → кнопка "Add Provider" | 🟢 Готово |
 
 ---
 
