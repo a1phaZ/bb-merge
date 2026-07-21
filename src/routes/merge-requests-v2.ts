@@ -5,6 +5,7 @@ import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
 import { addProgressEvent, finishProgress, getOrCreateSession } from './progress';
 import { logger } from '../logger';
+import { validate, mergeRequestCreateSchema } from '../validation';
 
 function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: any) => fn(req, res).catch(next);
@@ -28,12 +29,8 @@ interface MergeRequestBody {
 
 const router = Router();
 
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
+router.post('/', validate(mergeRequestCreateSchema), asyncHandler(async (req: Request, res: Response) => {
   const body = req.body as MergeRequestBody;
-
-  if (!body.providerId || !body.project || !body.repo || !body.target || !body.branches?.length) {
-    throw new AppError(400, 'providerId, project, repo, target, and branches are required');
-  }
 
   const storage = await getStorageProvider();
   const provider = await storage.getProvider(body.providerId);

@@ -3,6 +3,7 @@ import { getStorageProvider } from '../storage/factory';
 import { ProviderFactory } from '../providers/factory';
 import { AppError } from '../middleware/error-handler';
 import { logger } from '../logger';
+import { validate, webhookRegisterSchema } from '../validation';
 
 function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: any) => fn(req, res).catch(next);
@@ -62,16 +63,12 @@ router.delete('/events', asyncHandler(async (_req: Request, res: Response) => {
   res.json({ ok: true });
 }));
 
-router.post('/register/:providerId', asyncHandler(async (req: Request, res: Response) => {
+router.post('/register/:providerId', validate(webhookRegisterSchema), asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const provider = await storage.getProvider(req.params.providerId);
   if (!provider) throw new AppError(404, 'Provider not found');
 
   const { project, repo, url, events } = req.body;
-  if (!project || !repo || !url) {
-    throw new AppError(400, 'project, repo, and url are required');
-  }
-
   const client = ProviderFactory.create(provider);
   const result = await client.registerWebhook(project, repo, url, events || []);
   res.status(201).json(result);

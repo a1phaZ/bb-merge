@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
+import { validate, templateCreateSchema, templateUpdateSchema } from '../validation';
 
 function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: any) => fn(req, res).catch(next);
@@ -22,9 +23,8 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json(template);
 }));
 
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
+router.post('/', validate(templateCreateSchema), asyncHandler(async (req: Request, res: Response) => {
   const { name, providerId, project, repo, target, branches, titlePrefix, description, autoMerge, strategy } = req.body;
-  if (!name || !target) throw new AppError(400, 'name and target are required');
 
   const storage = await getStorageProvider();
   const template = {
@@ -47,7 +47,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json(template);
 }));
 
-router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
+router.put('/:id', validate(templateUpdateSchema), asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const existing = await storage.getTemplate(req.params.id);
   if (!existing) throw new AppError(404, 'Template not found');

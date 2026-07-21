@@ -59,7 +59,7 @@ Frontend and API available at `http://localhost:3000`.
 | `PORT` | Server port | `3000` |
 | `STORAGE_TYPE` | Storage backend (`file` or `sqlite`) | `file` |
 | `DATA_DIR` | Data directory | `./data` |
-| `ENCRYPTION_KEY` | AES-256-GCM key for token encryption (auto-generated if omitted) | — |
+| `ENCRYPTION_KEY` | AES-256-GCM key for token encryption — **required in Docker**, auto-generated on first run otherwise | — |
 | `WEBHOOK_SECRET` | Secret for webhook signature verification | — |
 
 ### Adding Git Providers
@@ -193,6 +193,8 @@ The Docker image uses a multi-stage build:
 1. **Stage 1**: Build Angular frontend
 2. **Stage 2**: Compile TypeScript backend
 3. **Final**: Run Express server serving both API and frontend
+
+> **Important**: Always set `ENCRYPTION_KEY` in production / Docker. If omitted, a key is auto-generated on first run and saved to `data/.encryption-key`. Without a persistent volume, the key is lost on container restart, making stored provider tokens unreadable. Generate one with: `openssl rand -hex 32`
 
 ## License
 

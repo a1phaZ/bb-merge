@@ -8,6 +8,7 @@ import { GitProvider, ProviderConfig } from '../providers/interfaces';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
 import { logger } from '../logger';
+import { validate, providerCreateSchema, providerUpdateSchema } from '../validation';
 
 ProviderFactory.register('bitbucket', BitbucketProvider);
 ProviderFactory.register('gitlab', GitLabProvider);
@@ -32,14 +33,8 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json(provider);
 }));
 
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
+router.post('/', validate(providerCreateSchema), asyncHandler(async (req: Request, res: Response) => {
   const { name, type, apiUrl, token, defaultTarget, defaultTitlePrefix } = req.body;
-  if (!name || !type || !apiUrl || !token) {
-    throw new AppError(400, 'name, type, apiUrl, and token are required');
-  }
-  if (!['bitbucket', 'gitlab', 'github'].includes(type)) {
-    throw new AppError(400, `Invalid provider type: ${type}. Must be bitbucket, gitlab, or github`);
-  }
 
   const provider: ProviderConfig = {
     id: uuid(),
@@ -59,7 +54,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json({ ...provider, token: '••••••••' });
 }));
 
-router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
+router.put('/:id', validate(providerUpdateSchema), asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const existing = await storage.getProvider(req.params.id);
   if (!existing) throw new AppError(404, 'Provider not found');
