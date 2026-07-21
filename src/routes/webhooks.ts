@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { v4 as uuid } from 'uuid';
 import { getStorageProvider } from '../storage/factory';
+import { ProviderFactory } from '../providers/factory';
 import { AppError } from '../middleware/error-handler';
 import { logger } from '../logger';
 
@@ -8,10 +8,15 @@ function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: any) => fn(req, res).catch(next);
 }
 
+function headerValue(headers: Record<string, string | string[] | undefined>, key: string): string | undefined {
+  const v = headers[key];
+  return Array.isArray(v) ? v[0] : v;
+}
+
 const router = Router();
 
 router.post('/bitbucket', asyncHandler(async (req: Request, res: Response) => {
-  const event = req.headers['x-event-key'] as string;
+  const event = headerValue(req.headers, 'x-event-key') || 'unknown';
   const payload = req.body;
 
   logger.info(`Webhook received: ${event}`, { event });
@@ -21,7 +26,7 @@ router.post('/bitbucket', asyncHandler(async (req: Request, res: Response) => {
     await storage.saveWebhookEvent({
       id: Date.now(),
       providerId: 'bitbucket',
-      eventType: event || 'unknown',
+      eventType: event,
       payloadJson: JSON.stringify(payload),
       receivedAt: new Date().toISOString(),
     });
@@ -56,5 +61,50 @@ router.delete('/events', asyncHandler(async (_req: Request, res: Response) => {
   await storage.deleteWebhookEvents();
   res.json({ ok: true });
 }));
+
+router.post('/register/:providerId', asyncHandler(async (req: Request, res: Response) => {
+  const storage = await getStorageProvider();
+  const provider = await storage.getProvider(req.params.providerId);
+  if (!provider) throw new AppError(404, 'Provider not found');
+
+  const { project, repo, url, events } = req.body;
+  if (!project || !repo || !url) {
+    throw new AppError(400, 'project, repo, and url are required');
+  }
+
+  const client = ProviderFactory.create(provider);
+  const result = await client.registerWebhook(project, repo, url, events || []);
+  res.status(201).json(result);
+}));
+
+const incomingWebhookHandler = asyncHandler(async (req: Request, res: Response) => {
+  const { providerId } = req.params;
+  const event = headerValue(req.headers, 'x-event-key')
+    || headerValue(req.headers, 'x-github-event')
+    || headerValue(req.headers, 'x-gitlab-event')
+    || 'unknown';
+  const payload = req.body;
+
+  logger.info(`Webhook received for ${providerId}: ${event}`, { providerId, event });
+
+  try {
+    const storage = await getStorageProvider();
+    await storage.saveWebhookEvent({
+      id: Date.now(),
+      providerId,
+      eventType: event,
+      payloadJson: JSON.stringify(payload),
+      receivedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    logger.error('Failed to save webhook event', { error: err.message });
+  }
+
+  res.sendStatus(200);
+});
+
+router.post('/receive/:providerId', incomingWebhookHandler);
+
+router.post('/:providerId', incomingWebhookHandler);
 
 export default router;
