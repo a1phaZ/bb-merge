@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ElementRef, viewChild, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subscription } from 'rxjs';
 import { LogsService } from '../../core/services/logs.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 
@@ -71,17 +72,22 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
       <mat-card>
         <mat-card-header>
           <mat-card-title>{{ selectedFile() }}</mat-card-title>
-          <button mat-icon-button (click)="selectedFile.set(null)">
+          <button mat-icon-button (click)="selectedFile.set(null); stopFollowing()">
             <mat-icon>close</mat-icon>
           </button>
         </mat-card-header>
         <mat-card-content>
-          <pre class="log-content">{{ logContent() }}</pre>
+          <pre class="log-content" #logContainer>{{ logContent() }}</pre>
           <div class="view-actions">
+            <button mat-stroked-button (click)="toggleFollow()" [color]="following() ? 'primary' : ''"
+              [disabled]="!selectedFile()">
+              <mat-icon>{{ following() ? 'sync' : 'sync_disabled' }}</mat-icon>
+              {{ following() ? 'Following...' : 'Follow' }}
+            </button>
             <button mat-stroked-button (click)="downloadFile(selectedFile()!)">
               <mat-icon>download</mat-icon> Download
             </button>
-            <button mat-stroked-button color="warn" (click)="deleteFile(selectedFile()!); selectedFile.set(null)">
+            <button mat-stroked-button color="warn" (click)="deleteFile(selectedFile()!); selectedFile.set(null); stopFollowing()">
               <mat-icon>delete</mat-icon> Delete
             </button>
           </div>
@@ -98,10 +104,13 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 export class LogsComponent {
   private logsService = inject(LogsService);
   private snackBar = inject(MatSnackBar);
+  logContainer = viewChild<ElementRef<HTMLPreElement>>('logContainer');
 
   files = signal<Array<{ name: string; size: number; createdAt: string; modifiedAt: string }>>([]);
   selectedFile = signal<string | null>(null);
   logContent = signal('');
+  following = signal(false);
+  private tailSub: Subscription | null = null;
 
   constructor() {
     this.loadFiles();
@@ -114,6 +123,7 @@ export class LogsComponent {
   }
 
   viewFile(name: string) {
+    this.stopFollowing();
     this.selectedFile.set(name);
     this.logsService.getContent(name).subscribe({
       next: (content) => this.logContent.set(content),
@@ -121,6 +131,49 @@ export class LogsComponent {
         this.logContent.set('Error loading log file');
         this.snackBar.open('Failed to load log file', 'Close', { duration: 3000 });
       },
+    });
+  }
+
+  toggleFollow() {
+    if (this.following()) {
+      this.stopFollowing();
+    } else {
+      this.startFollowing();
+    }
+  }
+
+  private startFollowing() {
+    const name = this.selectedFile();
+    if (!name) return;
+    this.following.set(true);
+    this.tailSub = this.logsService.tailLog(name).subscribe({
+      next: (data) => {
+        if (data.type === 'init') {
+          this.logContent.set(data.content);
+        } else if (data.type === 'line') {
+          this.logContent.update(c => c + data.content);
+        } else if (data.type === 'error') {
+          this.snackBar.open('Log tail error', 'Close', { duration: 3000 });
+        }
+        this.scrollToBottom();
+      },
+      error: () => {
+        this.following.set(false);
+        this.snackBar.open('Log tail connection lost', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
+  stopFollowing() {
+    this.following.set(false);
+    this.tailSub?.unsubscribe();
+    this.tailSub = null;
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      const el = this.logContainer()?.nativeElement;
+      if (el) el.scrollTop = el.scrollHeight;
     });
   }
 
@@ -151,6 +204,10 @@ export class LogsComponent {
       this.files.set([]);
       this.snackBar.open('All logs cleared', 'Close', { duration: 2000 });
     });
+  }
+
+  ngOnDestroy() {
+    this.stopFollowing();
   }
 
   formatSize(bytes: number): string {

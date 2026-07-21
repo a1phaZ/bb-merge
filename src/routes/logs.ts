@@ -33,6 +33,54 @@ router.get('/', asyncHandler(async (_req: Request, res: Response) => {
   res.json({ files });
 }));
 
+router.get('/tail', (req: Request, res: Response) => {
+  const filename = path.basename(req.query.file as string || '');
+  const filepath = path.join(LOG_DIR, filename);
+
+  if (!filename.endsWith('.log') || !fs.existsSync(filepath)) {
+    res.status(404).json({ error: 'Log file not found' });
+    return;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+
+  let fileSize = fs.statSync(filepath).size;
+  const initial = fs.readFileSync(filepath, 'utf8');
+  res.write(`data: ${JSON.stringify({ type: 'init', content: initial })}\n\n`);
+
+  let watcherActive = true;
+  const watcher = fs.watch(filepath, (eventType) => {
+    if (!watcherActive || eventType !== 'change') return;
+    try {
+      const stat = fs.statSync(filepath);
+      if (stat.size > fileSize) {
+        const fd = fs.openSync(filepath, 'r');
+        const buf = Buffer.alloc(stat.size - fileSize);
+        fs.readSync(fd, buf, 0, buf.length, fileSize);
+        fs.closeSync(fd);
+        fileSize = stat.size;
+        const content = buf.toString('utf8');
+        res.write(`data: ${JSON.stringify({ type: 'line', content })}\n\n`);
+      }
+    } catch {
+      res.write(`data: ${JSON.stringify({ type: 'error', content: 'Error reading log file' })}\n\n`);
+      watcherActive = false;
+      watcher.close();
+      res.end();
+    }
+  });
+
+  req.on('close', () => {
+    watcherActive = false;
+    watcher.close();
+  });
+});
+
 router.get('/:filename', asyncHandler(async (req: Request, res: Response) => {
   const filename = path.basename(req.params.filename);
   const filepath = path.join(LOG_DIR, filename);
