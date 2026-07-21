@@ -367,17 +367,18 @@ data/
 
 | Задача | Статус |
 |--------|--------|
-| Шаг 1 — выбор провайдера (dropdown + иконка + статус) | 🟡 План |
-| Шаг 2 — проект и репозиторий (input + autocomplete) | 🟡 План |
-| Шаг 3 — target branch (input + autocomplete) | 🟡 План |
-| Шаг 4 — source branches (textarea + "Load from repository" modal) | 🟡 План |
-| Шаг 5 — PR options (title_prefix, description, preview) | 🟡 План |
-| Шаг 6 — Merge options (auto-merge toggle, strategy dropdown) | 🟡 План |
+| Шаг 1 — выбор провайдера (dropdown) | 🟢 Готово |
+| Шаг 2 — проект и репозиторий | 🟢 Готово |
+| Шаг 3 — target branch | 🟢 Готово |
+| Шаг 4 — source branches (textarea) | 🟢 Готово |
+| Шаг 5 — PR options (title_prefix, description) | 🟢 Готово |
+| Шаг 6 — Merge options (auto-merge toggle, strategy dropdown) | 🟢 Готово |
 | Шаг 7 — Webhook (toggle, URL, события чекбоксы) | 🟡 План |
 | Dry-Run toggle — preview только | 🟡 План |
-| SSE прогресс для каждой ветки (timeline с иконками) | 🟡 План |
-| Отчёт после завершения: таблица со статусами, ссылки на PR | 🟡 План |
+| SSE прогресс для каждой ветки (timeline с иконками) | 🟢 Готово |
+| Отчёт после завершения: timeline событий | 🟢 Готово |
 | Кнопки: "Copy report", "Save to history", "Save as template" | 🟡 План |
+| Load branches from repository | 🟡 План |
 
 ---
 
