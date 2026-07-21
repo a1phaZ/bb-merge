@@ -285,8 +285,8 @@ data/
 | `GET` | `/api/v1/logs` | Список лог-файлов | 🟢 Готово |
 | `GET` | `/api/v1/logs/:filename` | Содержимое лога | 🟢 Готово |
 | `DELETE` | `/api/v1/logs` | Очистить логи | 🟢 Готово |
-| `GET` | `/api/v1/webhooks/events` | Webhook-события | 🟡 План |
-| `DELETE` | `/api/v1/webhooks/events` | Очистить события | 🟡 План |
+| `GET` | `/api/v1/webhooks/events` | Webhook-события | 🟢 Готово |
+| `DELETE` | `/api/v1/webhooks/events` | Очистить события | 🟢 Готово |
 | `POST` | `/api/v1/webhooks/:providerId` | Зарегистрировать webhook | 🟡 План |
 | `GET` | `/api/v1/settings/storage-type` | Тип storage | 🟢 Готово |
 | `PUT` | `/api/v1/settings` | Сохранить настройки | 🟢 Готово |

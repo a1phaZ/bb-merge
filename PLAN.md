@@ -1176,21 +1176,24 @@ ng add @angular/material
 3. Use Template
 4. Export/Import
 
-### Этап 12 — Browser page
+### Этап 12 — Browser page ✅ Готово
 
 **Примерный объём:** 1 день
 
-1. Выбор провайдера
-2. Список веток
-3. Create MR for selected
+1. Выбор провайдера + поля project/repo
+2. Таблица веток (branch name, latest commit, author, date)
+3. Загрузка/ошибка/пустые состояния
+4. Тесты: 9 unit + 4 API
 
-### Этап 13 — Webhooks page
+### Этап 13 — Webhooks page ✅ Готово
 
 **Примерный объём:** 1 день
 
-1. Registered webhooks
-2. Register form
-3. Events history
+1. Backend: GET/DELETE /api/v1/webhooks/events
+2. Backend: сохранение входящих webhook событий
+3. Events History: таблица с expandable payload
+4. Кнопка "Clear Events" с подтверждением
+5. Тесты: 7 API + 10 unit + 3 service
 
 ### Этап 14 — Logs page
 
@@ -1218,8 +1221,8 @@ ng add @angular/material
 | 9 — Dashboard | 1-2 |
 | 10 — History | 1-2 |
 | 11 — Templates | 1 |
-| 12 — Browser | 1 |
-| 13 — Webhooks | 1 |
+| 12 — Browser ✅ | 1 |
+| 13 — Webhooks ✅ | 1 |
 | 14 — Logs | 0.5 |
 | **Total v1.0** | **~22-28 дней** |
 
@@ -1241,8 +1244,8 @@ ng add @angular/material
 Этап 9 (dashboard) ←  зависимость от 4, 5
 Этап 10 (history)  ←  зависимость от 4, 5, 8
 Этап 11 (templates)←  зависимость от 4, 5, 8
-Этап 12 (browser)  ←  зависимость от 2, 4, 5, 7
-Этап 13 (webhooks) ←  зависимость от 2, 4, 5, 7
+Этап 12 (browser ✅) ←  зависимость от 2, 4, 5, 7
+Этап 13 (webhooks ✅) ←  зависимость от 2, 4, 5, 7
 Этап 14 (logs)     ←  зависимость от 4, 5
 ```
 
