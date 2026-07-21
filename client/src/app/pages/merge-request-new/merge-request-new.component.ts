@@ -231,8 +231,8 @@ export class MergeRequestNewComponent {
       this.form.project = config.project || '';
       this.form.repo = config.repo || '';
       this.form.target = config.target || 'main';
-      this.form.titlePrefix = config.titlePrefix || 'Merge';
-      this.form.description = config.description || '';
+      this.form.titlePrefix = (config as any).titlePrefix || 'Merge';
+      this.form.description = (config as any).description || '';
       this.form.autoMerge = config.autoMerge || false;
       this.form.strategy = config.strategy || 'merge';
       if (config.resultsJson) {

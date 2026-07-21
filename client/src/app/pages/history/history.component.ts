@@ -203,7 +203,12 @@ export class HistoryComponent {
       limit: this.limit(),
       providerId: this.filterProvider || undefined,
       search: this.filterSearch || undefined,
-    }).subscribe();
+    }).subscribe({
+      next: (result) => {
+        this.items.set(result.items);
+        this.total.set(result.total);
+      },
+    });
   }
 
   searchChanged() {

@@ -190,10 +190,9 @@ interface StatsEntry {
 })
 export class DashboardComponent {
   private api = inject(ApiService);
-  private historyService = inject(HistoryService);
 
   providers = computed(() => this.api.providers.value() ?? []);
-  historyRes = this.historyService.getList({ limit: 100, page: 1 });
+  historyRes = this.api.getHistory({ limit: 100, page: 1 });
 
   stats = signal<StatsEntry[]>([]);
   selectedDays = 30;

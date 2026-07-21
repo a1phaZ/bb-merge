@@ -20,7 +20,7 @@ export interface MergeRequestResponse {
 }
 
 export interface ProgressEvent {
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | 'done';
   message: string;
   branch?: string;
   prId?: number;

@@ -13,12 +13,12 @@ export class ApiService {
   private http = inject(HttpClient);
   private cache = inject(CacheService);
 
-  private resource<T>(key: string, loader: () => Observable<T>) {
+  private resource<T>(key: string, streamFn: () => Observable<T>) {
     return rxResource<T, void>({
-      loader: () => {
+      stream: () => {
         const cached = this.cache.get<T>(key);
         if (cached) return of(cached);
-        return loader().pipe(tap(data => this.cache.set(key, data)));
+        return streamFn().pipe(tap(data => this.cache.set(key, data)));
       },
     });
   }
@@ -67,14 +67,23 @@ export class ApiService {
   }
 
   getHistory(filter?: HistoryFilter) {
+    const qs = this.buildHistoryQuery(filter);
+    return this.resource<PaginatedResult<HistoryRecord>>(`history?${qs}`, () =>
+      this.http.get<PaginatedResult<HistoryRecord>>(`/api/v1/history?${qs}`));
+  }
+
+  getHistoryList(filter?: HistoryFilter) {
+    const qs = this.buildHistoryQuery(filter);
+    return this.http.get<PaginatedResult<HistoryRecord>>(`/api/v1/history?${qs}`);
+  }
+
+  private buildHistoryQuery(filter?: HistoryFilter): string {
     const params = new URLSearchParams();
     if (filter?.page) params.set('page', String(filter.page));
     if (filter?.limit) params.set('limit', String(filter.limit));
     if (filter?.providerId) params.set('providerId', filter.providerId);
     if (filter?.search) params.set('search', filter.search);
-    const qs = params.toString();
-    return this.resource<PaginatedResult<HistoryRecord>>(`history?${qs}`, () =>
-      this.http.get<PaginatedResult<HistoryRecord>>(`/api/v1/history?${qs}`));
+    return params.toString();
   }
 
   getHistoryItem(id: string) {
@@ -146,6 +155,6 @@ export class ApiService {
   }
 
   getHealth() {
-    return this.http.get<{ status: string }>('/health');
+    return this.http.get<{ status: string; environment: string }>('/health');
   }
 }
