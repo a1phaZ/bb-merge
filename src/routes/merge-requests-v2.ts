@@ -21,6 +21,7 @@ interface MergeRequestBody {
   autoMerge?: boolean;
   strategy?: string;
   sessionId?: string;
+  dryRun?: boolean;
 }
 
 const router = Router();
@@ -43,14 +44,16 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const description = body.description || `Auto-created merge request for ${body.project}/${body.repo}`;
   const autoMerge = body.autoMerge ?? false;
   const strategy = body.strategy || 'merge';
+  const dryRun = body.dryRun ?? false;
 
-  res.json({ sessionId, message: 'Merge request creation started' });
+  res.json({ sessionId, message: dryRun ? 'Dry run started' : 'Merge request creation started' });
 
   setImmediate(async () => {
     try {
       const client = ProviderFactory.create(provider);
 
-      addProgressEvent(sessionId, { type: 'info', message: `Starting merge request creation for ${body.project}/${body.repo}` });
+      const mode = dryRun ? 'Dry run' : 'Merge request';
+      addProgressEvent(sessionId, { type: 'info', message: `${mode} starting for ${body.project}/${body.repo}` });
 
       for (const branch of body.branches) {
         addProgressEvent(sessionId, { type: 'info', message: `Processing branch ${branch}`, branch });
@@ -81,6 +84,24 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
         }
 
         const title = `${titlePrefix} ${branch} into ${body.target}`;
+
+        if (dryRun) {
+          addProgressEvent(sessionId, { type: 'info', message: `[DRY RUN] Would create PR: ${title}`, branch });
+
+          let mergeStatus;
+          try {
+            mergeStatus = await client.checkMergeConflicts(body.project, body.repo, 0);
+          } catch {
+            mergeStatus = null;
+          }
+
+          if (mergeStatus?.conflicted) {
+            addProgressEvent(sessionId, { type: 'warning', message: `[DRY RUN] Conflicts would be detected`, branch });
+          } else {
+            addProgressEvent(sessionId, { type: 'success', message: `[DRY RUN] Branch is mergeable`, branch });
+          }
+          continue;
+        }
 
         let pr;
         try {
@@ -124,6 +145,12 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
         } else {
           addProgressEvent(sessionId, { type: 'info', message: `PR #${pr.id} created (no conflicts, auto-merge disabled)`, branch, prId: pr.id });
         }
+      }
+
+      if (dryRun) {
+        addProgressEvent(sessionId, { type: 'info', message: 'Dry run completed. Switch to real mode to create merge requests.' });
+        finishProgress(sessionId);
+        return;
       }
 
       await storage.saveHistory({
