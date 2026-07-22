@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { GitProvider, ProviderConfig, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
+import { GitProvider, ProviderConfig, RepoInfo, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
 
 export class GitLabProvider implements GitProvider {
   readonly type = 'gitlab';
@@ -14,6 +14,24 @@ export class GitLabProvider implements GitProvider {
 
   private encodeProjectPath(project: string, repo: string): string {
     return encodeURIComponent(`${project}/${repo}`);
+  }
+
+  async listRepos(): Promise<RepoInfo[]> {
+    try {
+      const response = await this.client.get('/api/v4/projects', {
+        params: { per_page: 100, simple: true },
+      });
+      return (response.data || []).map((r: any) => {
+        const parts = r.path_with_namespace.split('/');
+        return {
+          project: parts.slice(0, -1).join('/') || parts[0],
+          name: parts[parts.length - 1],
+          fullName: r.path_with_namespace,
+        };
+      });
+    } catch {
+      return [];
+    }
   }
 
   async testConnection(): Promise<{ ok: boolean; message: string }> {

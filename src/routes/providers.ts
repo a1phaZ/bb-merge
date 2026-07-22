@@ -8,7 +8,8 @@ import { GitProvider, ProviderConfig } from '../providers/interfaces';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
 import { logger } from '../logger';
-import { validate, providerCreateSchema, providerUpdateSchema } from '../validation';
+import { validate, providerCreateSchema, providerUpdateSchema, providerExploreReposSchema } from '../validation';
+import { RepoInfo } from '../providers/interfaces';
 
 ProviderFactory.register('bitbucket', BitbucketProvider);
 ProviderFactory.register('gitlab', GitLabProvider);
@@ -34,7 +35,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 router.post('/', validate(providerCreateSchema), asyncHandler(async (req: Request, res: Response) => {
-  const { name, type, apiUrl, token, defaultTarget, defaultTitlePrefix } = req.body;
+  const { name, type, apiUrl, token, defaultTarget, defaultTitlePrefix, defaultProject, defaultRepo } = req.body;
 
   const provider: ProviderConfig = {
     id: uuid(),
@@ -44,6 +45,8 @@ router.post('/', validate(providerCreateSchema), asyncHandler(async (req: Reques
     token,
     defaultTarget: defaultTarget || 'main',
     defaultTitlePrefix: defaultTitlePrefix || 'Merge',
+    defaultProject: defaultProject || undefined,
+    defaultRepo: defaultRepo || undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -52,6 +55,26 @@ router.post('/', validate(providerCreateSchema), asyncHandler(async (req: Reques
   await storage.saveProvider(provider);
 
   res.status(201).json({ ...provider, token: '••••••••' });
+}));
+
+router.post('/repos/explore', validate(providerExploreReposSchema), asyncHandler(async (req: Request, res: Response) => {
+  const { type, apiUrl, token } = req.body;
+  const tempConfig: ProviderConfig = {
+    id: '_explore',
+    name: '_explore',
+    type,
+    apiUrl: apiUrl.replace(/\/$/, ''),
+    token,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    const client = ProviderFactory.create(tempConfig);
+    const repos = await client.listRepos();
+    res.json(repos);
+  } catch (error: any) {
+    throw new AppError(502, `Failed to list repositories: ${error.message}`);
+  }
 }));
 
 router.put('/:id', validate(providerUpdateSchema), asyncHandler(async (req: Request, res: Response) => {

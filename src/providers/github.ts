@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { GitProvider, ProviderConfig, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
+import { GitProvider, ProviderConfig, RepoInfo, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
 
 export class GitHubProvider implements GitProvider {
   readonly type = 'github';
@@ -14,6 +14,21 @@ export class GitHubProvider implements GitProvider {
         Accept: 'application/vnd.github.v3+json',
       },
     });
+  }
+
+  async listRepos(): Promise<RepoInfo[]> {
+    try {
+      const response = await this.client.get('/user/repos', {
+        params: { per_page: 100, type: 'all', sort: 'full_name' },
+      });
+      return (response.data || []).map((r: any) => ({
+        project: r.owner.login,
+        name: r.name,
+        fullName: r.full_name,
+      }));
+    } catch {
+      return [];
+    }
   }
 
   async testConnection(): Promise<{ ok: boolean; message: string }> {

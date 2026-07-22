@@ -1,3 +1,9 @@
+export interface RepoInfo {
+  project: string;
+  name: string;
+  fullName: string;
+}
+
 export interface ProviderConfig {
   id: string;
   name: string;
@@ -6,6 +12,8 @@ export interface ProviderConfig {
   token: string;
   defaultTarget?: string;
   defaultTitlePrefix?: string;
+  defaultProject?: string;
+  defaultRepo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +25,8 @@ export interface ProviderCreate {
   token: string;
   defaultTarget?: string;
   defaultTitlePrefix?: string;
+  defaultProject?: string;
+  defaultRepo?: string;
 }
 
 export interface GitBranch {

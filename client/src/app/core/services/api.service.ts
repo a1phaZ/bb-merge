@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { map, Observable, of, tap } from 'rxjs';
 import { CacheService } from '../cache/cache.service';
-import { ProviderConfig, ProviderCreate, GitBranch } from '../../shared/models/provider.model';
+import { ProviderConfig, ProviderCreate, GitBranch, RepoInfo } from '../../shared/models/provider.model';
 import { HistoryRecord, HistoryFilter, PaginatedResult } from '../../shared/models/history.model';
 import { Template } from '../../shared/models/template.model';
 import { MergeRequestCreate, MergeRequestResponse } from '../../shared/models/merge-result.model';
@@ -54,6 +54,10 @@ export class ApiService {
 
   testConnection(id: string) {
     return this.http.post<{ ok: boolean; message: string }>(`/api/v1/providers/${id}/test`, {});
+  }
+
+  exploreProviderRepos(type: string, apiUrl: string, token: string) {
+    return this.http.post<RepoInfo[]>('/api/v1/providers/repos/explore', { type, apiUrl, token });
   }
 
   getBranches(id: string, project: string, repo: string, filter?: string) {

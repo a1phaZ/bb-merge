@@ -7,12 +7,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ProvidersService } from '../../core/services/providers.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
-import { ProviderCreate } from '../../shared/models/provider.model';
+import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
 
 @Component({
   selector: 'app-providers',
@@ -20,7 +21,7 @@ import { ProviderCreate } from '../../shared/models/provider.model';
   imports: [
     CommonModule,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
     MatSnackBarModule, MatTooltipModule,
     TranslatePipe, EmptyStateComponent,
   ],
@@ -68,6 +69,43 @@ import { ProviderCreate } from '../../shared/models/provider.model';
               <input matInput [value]="form().defaultTitlePrefix" (input)="updateForm('defaultTitlePrefix', $any($event).target.value)" placeholder="Merge">
             </mat-form-field>
           </div>
+
+          <div class="repo-section mt-16">
+            <h4>{{ 'providers.repository' | translate }}</h4>
+            <div class="repo-row">
+              <button mat-stroked-button (click)="loadRepos()"
+                [disabled]="!form().apiUrl || !form().token || loadingRepos()">
+                <mat-icon>cloud_download</mat-icon>
+                {{ loadingRepos() ? ('providers.loading' | translate) : ('providers.loadRepos' | translate) }}
+              </button>
+              @if (reposError()) {
+                <span class="repo-error">{{ reposError() }}</span>
+              }
+            </div>
+            @if (repos().length > 0) {
+              <mat-form-field appearance="fill" class="full-width mt-16">
+                <mat-label>{{ 'providers.selectRepo' | translate }}</mat-label>
+                <input matInput [matAutocomplete]="repoAuto"
+                  [value]="selectedRepoLabel()"
+                  (input)="filterRepos($any($event).target.value)">
+                <mat-autocomplete #repoAuto="matAutocomplete"
+                  (optionSelected)="onRepoSelected($event.option.value)">
+                  @for (r of filteredRepos(); track r.fullName) {
+                    <mat-option [value]="r">
+                      {{ r.fullName }}
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+            }
+            @if (form().defaultProject && form().defaultRepo) {
+              <div class="selected-repo">
+                <mat-icon>check_circle</mat-icon>
+                {{ form().defaultProject }}/{{ form().defaultRepo }}
+              </div>
+            }
+          </div>
+
           <div class="form-actions">
             <button mat-button (click)="cancelForm()">{{ 'providers.cancel' | translate }}</button>
             <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
@@ -150,6 +188,12 @@ import { ProviderCreate } from '../../shared/models/provider.model';
     .test-result { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px; border-radius: 4px; }
     .test-result.success { background: #e8f5e9; color: #2e7d32; }
     .test-result.error { background: #ffebee; color: #c62828; }
+    .repo-section { border-top: 1px solid #e0e0e0; padding-top: 16px; }
+    .repo-section h4 { margin: 0 0 12px; font-weight: 500; }
+    .repo-row { display: flex; align-items: center; gap: 12px; }
+    .repo-error { color: #c62828; font-size: 13px; }
+    .selected-repo { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #2e7d32; }
+    .full-width { width: 100%; }
   `,
 })
 export class ProvidersComponent {
@@ -163,12 +207,57 @@ export class ProvidersComponent {
   testingId = signal<string | null>(null);
   testResult = signal<{ ok: boolean; message: string } | null>(null);
 
+  repos = signal<RepoInfo[]>([]);
+  filteredRepos = signal<RepoInfo[]>([]);
+  loadingRepos = signal(false);
+  reposError = signal<string | null>(null);
+  repoFilter = signal('');
+
+  selectedRepoLabel = computed(() => {
+    const f = this.form();
+    if (f.defaultProject && f.defaultRepo) return `${f.defaultProject}/${f.defaultRepo}`;
+    return '';
+  });
+
   columns = ['name', 'type', 'apiUrl', 'defaultTarget', 'actions'];
 
   form = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
 
   protected updateForm(key: string, value: string) {
     this.form.update(f => ({ ...f, [key]: value }));
+  }
+
+  loadRepos() {
+    const f = this.form();
+    if (!f.apiUrl || !f.token) return;
+
+    this.loadingRepos.set(true);
+    this.reposError.set(null);
+    this.repos.set([]);
+
+    this.service.exploreRepos(f.type, f.apiUrl, f.token).subscribe({
+      next: (repos) => {
+        this.repos.set(repos);
+        this.filteredRepos.set(repos);
+        this.loadingRepos.set(false);
+      },
+      error: () => {
+        this.reposError.set('Failed to load repositories');
+        this.loadingRepos.set(false);
+      },
+    });
+  }
+
+  filterRepos(value: string) {
+    const filter = value?.toLowerCase() || '';
+    this.repoFilter.set(filter);
+    this.filteredRepos.set(
+      this.repos().filter(r => r.fullName.toLowerCase().includes(filter))
+    );
+  }
+
+  onRepoSelected(repo: RepoInfo) {
+    this.form.update(f => ({ ...f, defaultProject: repo.project, defaultRepo: repo.name }));
   }
 
   cancelForm() {
@@ -179,6 +268,9 @@ export class ProvidersComponent {
 
   private resetForm() {
     this.form.set({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
+    this.repos.set([]);
+    this.filteredRepos.set([]);
+    this.reposError.set(null);
   }
 
   save() {
@@ -206,6 +298,11 @@ export class ProvidersComponent {
   edit(p: any) {
     this.editingId.set(p.id);
     this.form.set({ ...p, token: '' });
+    if (p.defaultProject && p.defaultRepo) {
+      const repo: RepoInfo = { project: p.defaultProject, name: p.defaultRepo, fullName: `${p.defaultProject}/${p.defaultRepo}` };
+      this.repos.set([repo]);
+      this.filteredRepos.set([repo]);
+    }
     this.showForm.set(true);
   }
 

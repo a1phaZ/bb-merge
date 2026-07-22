@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import https from 'https';
-import { GitProvider, ProviderConfig, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
+import { GitProvider, ProviderConfig, RepoInfo, GitBranch, GitPullRequest, GitMergeStatus, CommitterInfo, CreatePRParams, WebhookInfo } from './interfaces';
 
 export class BitbucketProvider implements GitProvider {
   readonly type = 'bitbucket';
@@ -13,6 +13,19 @@ export class BitbucketProvider implements GitProvider {
       headers: { 'Content-Type': 'application/json' },
       httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     });
+  }
+
+  async listRepos(): Promise<RepoInfo[]> {
+    try {
+      const response = await this.client.get('/rest/api/1.0/repos', { params: { limit: 1000 } });
+      return (response.data.values || []).map((r: any) => ({
+        project: r.project.key,
+        name: r.slug,
+        fullName: `${r.project.key}/${r.slug}`,
+      }));
+    } catch {
+      return [];
+    }
   }
 
   async testConnection(): Promise<{ ok: boolean; message: string }> {

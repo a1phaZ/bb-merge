@@ -54,6 +54,10 @@
   "providers.delete": "Удалить",
   "providers.none": "Провайдеры не настроены",
   "providers.addHint": "Добавьте Git-провайдера, чтобы начать создавать merge request'ы.",
+  "providers.repository": "Репозиторий",
+  "providers.loadRepos": "Загрузить репозитории",
+  "providers.selectRepo": "Выберите репозиторий",
+  "providers.loading": "Загрузка...",
 
   "mrNew.title": "Новый MR",
   "mrNew.provider": "Провайдер",

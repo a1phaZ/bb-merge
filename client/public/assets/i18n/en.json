@@ -54,6 +54,10 @@
   "providers.delete": "Delete",
   "providers.none": "No providers configured",
   "providers.addHint": "Add a Git provider to start creating merge requests.",
+  "providers.repository": "Repository",
+  "providers.loadRepos": "Load Repositories",
+  "providers.selectRepo": "Select repository",
+  "providers.loading": "Loading...",
 
   "mrNew.title": "New Merge Request",
   "mrNew.provider": "Provider",

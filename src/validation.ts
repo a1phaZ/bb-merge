@@ -12,6 +12,8 @@ export const providerCreateSchema = z.object({
   token: nonEmpty(),
   defaultTarget: z.string().optional(),
   defaultTitlePrefix: z.string().optional(),
+  defaultProject: z.string().optional(),
+  defaultRepo: z.string().optional(),
 });
 
 export const providerUpdateSchema = z.object({
@@ -21,6 +23,14 @@ export const providerUpdateSchema = z.object({
   token: z.string().optional(),
   defaultTarget: z.string().optional(),
   defaultTitlePrefix: z.string().optional(),
+  defaultProject: z.string().optional(),
+  defaultRepo: z.string().optional(),
+});
+
+export const providerExploreReposSchema = z.object({
+  type: z.enum(['bitbucket', 'gitlab', 'github']),
+  apiUrl: url(),
+  token: nonEmpty(),
 });
 
 export const templateCreateSchema = z.object({

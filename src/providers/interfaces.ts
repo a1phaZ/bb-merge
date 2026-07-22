@@ -1,3 +1,9 @@
+export interface RepoInfo {
+  project: string;
+  name: string;
+  fullName: string;
+}
+
 export interface ProviderConfig {
   id: string;
   name: string;
@@ -6,6 +12,8 @@ export interface ProviderConfig {
   token: string;
   defaultTarget?: string;
   defaultTitlePrefix?: string;
+  defaultProject?: string;
+  defaultRepo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,6 +63,7 @@ export interface GitProvider {
   readonly type: string;
 
   testConnection(): Promise<{ ok: boolean; message: string }>;
+  listRepos(): Promise<RepoInfo[]>;
   listBranches(project: string, repo: string, filter?: string): Promise<GitBranch[]>;
   checkBranchExists(project: string, repo: string, branch: string): Promise<boolean>;
   findExistingPR(project: string, repo: string, branch: string, target: string): Promise<GitPullRequest | null>;

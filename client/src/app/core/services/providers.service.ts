@@ -14,6 +14,7 @@ export class ProvidersService {
   update(id: string, data: any) { return this.api.updateProvider(id, data); }
   delete(id: string) { return this.api.deleteProvider(id); }
   test(id: string) { return this.api.testConnection(id); }
+  exploreRepos(type: string, apiUrl: string, token: string) { return this.api.exploreProviderRepos(type, apiUrl, token); }
   getBranches(id: string, project: string, repo: string, filter?: string) {
     return this.api.getBranches(id, project, repo, filter);
   }

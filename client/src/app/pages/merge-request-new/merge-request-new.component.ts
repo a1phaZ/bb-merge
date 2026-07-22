@@ -39,7 +39,7 @@ import { Subscription } from 'rxjs';
             <div class="form-grid">
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.provider' | translate }}</mat-label>
-                <mat-select [value]="form().providerId" (selectionChange)="updateForm('providerId', $event.value)">
+                <mat-select [value]="form().providerId" (selectionChange)="onProviderChange($event.value)">
                   @for (p of providers(); track p.id) {
                     <mat-option [value]="p.id">
                       {{ p.name }} ({{ p.type }})
@@ -297,6 +297,19 @@ export class MergeRequestNewComponent {
 
   protected updateForm(key: string, value: string | boolean | string[]) {
     this.form.update(f => ({ ...f, [key]: value }));
+  }
+
+  protected onProviderChange(providerId: string) {
+    this.form.update(f => ({ ...f, providerId }));
+    const provider = this.providers().find(p => p.id === providerId);
+    if (provider) {
+      const updates: Record<string, string | boolean | string[]> = {};
+      if (provider.defaultProject) updates['project'] = provider.defaultProject;
+      if (provider.defaultRepo) updates['repo'] = provider.defaultRepo;
+      if (Object.keys(updates).length > 0) {
+        this.form.update(f => ({ ...f, ...updates }));
+      }
+    }
   }
 
   private sub: Subscription | null = null;
