@@ -7,13 +7,17 @@
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build --base-href /",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@analogjs/vite-plugin-angular": "^2.6.3",
     "@angular/animations": "^22.0.0",
+    "@angular/build": "^22.0.7",
     "@angular/cdk": "^22.0.0",
     "@angular/common": "^22.0.0",
-    "@angular/compiler": "^22.0.0",
+    "@angular/compiler": "^22.0.7",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
     "@angular/material": "^22.0.0",
@@ -22,14 +26,21 @@
     "@angular/router": "^22.0.0",
     "@ngx-translate/core": "^18.0.0",
     "@ngx-translate/http-loader": "^18.0.0",
+    "@rollup/rollup-linux-x64-gnu": "^4.62.2",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zone.js": "^0.16.2"
   },
   "devDependencies": {
+    "@analogjs/vitest-angular": "^2.6.3",
     "@angular-devkit/build-angular": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
     "@angular/localize": "^22.0.0",
-    "typescript": "~6.0.0"
+    "@types/jsdom": "^28.0.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "jsdom": "^29.1.1",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.10"
   }
 }

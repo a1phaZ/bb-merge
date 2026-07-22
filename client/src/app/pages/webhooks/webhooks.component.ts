@@ -1,6 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,7 +23,7 @@ export interface WebhookEvent {
   selector: 'app-webhooks',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule,
     MatCardModule, MatButtonModule, MatIconModule,
     MatTableModule, MatProgressBarModule, MatTooltipModule,
     MatSnackBarModule,

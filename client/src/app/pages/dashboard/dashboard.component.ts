@@ -2,7 +2,6 @@ import { Component, inject, computed, signal, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,7 +24,7 @@ interface StatsEntry {
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, FormsModule,
+    CommonModule, RouterLink,
     MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatSelectModule,
     TranslatePipe, EmptyStateComponent, TimeAgoPipe,
   ],
@@ -70,7 +69,7 @@ interface StatsEntry {
             <mat-card-header>
               <mat-card-title>{{ 'dashboard.trend' | translate }}</mat-card-title>
               <mat-form-field appearance="fill" subscriptSizing="dynamic" class="days-select">
-                <mat-select [(ngModel)]="selectedDays" (ngModelChange)="loadStats()">
+                <mat-select [value]="selectedDays()" (selectionChange)="selectedDays.set($event.value); loadStats()">
                   <mat-option [value]="7">{{ 'dashboard.7days' | translate }}</mat-option>
                   <mat-option [value]="14">{{ 'dashboard.14days' | translate }}</mat-option>
                   <mat-option [value]="30">{{ 'dashboard.30days' | translate }}</mat-option>
@@ -211,7 +210,7 @@ export class DashboardComponent implements OnDestroy {
   historyRes = this.api.getHistory({ limit: 100, page: 1 });
 
   stats = signal<StatsEntry[]>([]);
-  selectedDays = 30;
+  selectedDays = signal(30);
 
   recent = computed(() => {
     const h = this.historyRes.value();
@@ -245,7 +244,7 @@ export class DashboardComponent implements OnDestroy {
 
   loadStats() {
     this.statsSub?.unsubscribe();
-    this.statsSub = this.api.getHistoryStats(this.selectedDays).subscribe({
+    this.statsSub = this.api.getHistoryStats(this.selectedDays()).subscribe({
       next: (data) => this.stats.set(data),
     });
   }

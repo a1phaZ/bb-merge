@@ -1,6 +1,5 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +18,7 @@ import { UiSettingsService, Theme } from '../../core/services/ui-settings.servic
   selector: 'app-settings',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatTabsModule, MatListModule, MatSnackBarModule,
@@ -54,7 +53,7 @@ import { UiSettingsService, Theme } from '../../core/services/ui-settings.servic
             <div class="form-grid">
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'settings.language' | translate }}</mat-label>
-                <mat-select [ngModel]="uiSettings.language()" (ngModelChange)="uiSettings.language.set($event)">
+                <mat-select [value]="uiSettings.language()" (selectionChange)="uiSettings.language.set($event.value)">
                   <mat-option value="en">{{ 'settings.english' | translate }}</mat-option>
                   <mat-option value="ru">{{ 'settings.russian' | translate }}</mat-option>
                 </mat-select>
@@ -62,7 +61,7 @@ import { UiSettingsService, Theme } from '../../core/services/ui-settings.servic
 
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'settings.theme' | translate }}</mat-label>
-                <mat-select [ngModel]="uiSettings.theme()" (ngModelChange)="uiSettings.theme.set($event)">
+                <mat-select [value]="uiSettings.theme()" (selectionChange)="uiSettings.theme.set($event.value)">
                   <mat-option value="light">{{ 'settings.light' | translate }}</mat-option>
                   <mat-option value="dark">{{ 'settings.dark' | translate }}</mat-option>
                   <mat-option value="auto">{{ 'settings.auto' | translate }}</mat-option>

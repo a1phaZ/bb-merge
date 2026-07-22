@@ -1,6 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +18,7 @@ import { ProviderCreate } from '../../shared/models/provider.model';
   selector: 'app-providers',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSnackBarModule, MatTooltipModule,
@@ -42,11 +41,11 @@ import { ProviderCreate } from '../../shared/models/provider.model';
           <div class="form-grid">
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.name' | translate }}</mat-label>
-              <input matInput [(ngModel)]="form.name" placeholder="My Bitbucket">
+              <input matInput [value]="form().name" (input)="updateForm('name', $any($event).target.value)" placeholder="My Bitbucket">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.type' | translate }}</mat-label>
-              <mat-select [(ngModel)]="form.type">
+              <mat-select [value]="form().type" (selectionChange)="updateForm('type', $event.value)">
                 <mat-option value="bitbucket">Bitbucket</mat-option>
                 <mat-option value="gitlab">GitLab</mat-option>
                 <mat-option value="github">GitHub</mat-option>
@@ -54,19 +53,19 @@ import { ProviderCreate } from '../../shared/models/provider.model';
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
-              <input matInput [(ngModel)]="form.apiUrl" placeholder="https://bitbucket.example.com">
+              <input matInput [value]="form().apiUrl" (input)="updateForm('apiUrl', $any($event).target.value)" placeholder="https://bitbucket.example.com">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.token' | translate }}</mat-label>
-              <input matInput type="password" [(ngModel)]="form.token">
+              <input matInput type="password" [value]="form().token" (input)="updateForm('token', $any($event).target.value)">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.defaultTarget' | translate }}</mat-label>
-              <input matInput [(ngModel)]="form.defaultTarget" placeholder="main">
+              <input matInput [value]="form().defaultTarget" (input)="updateForm('defaultTarget', $any($event).target.value)" placeholder="main">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.defaultPrefix' | translate }}</mat-label>
-              <input matInput [(ngModel)]="form.defaultTitlePrefix" placeholder="Merge">
+              <input matInput [value]="form().defaultTitlePrefix" (input)="updateForm('defaultTitlePrefix', $any($event).target.value)" placeholder="Merge">
             </mat-form-field>
           </div>
           <div class="form-actions">
@@ -166,7 +165,11 @@ export class ProvidersComponent {
 
   columns = ['name', 'type', 'apiUrl', 'defaultTarget', 'actions'];
 
-  form: ProviderCreate = { name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' };
+  form = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
+
+  protected updateForm(key: string, value: string) {
+    this.form.update(f => ({ ...f, [key]: value }));
+  }
 
   cancelForm() {
     this.showForm.set(false);
@@ -175,18 +178,19 @@ export class ProvidersComponent {
   }
 
   private resetForm() {
-    this.form = { name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' };
+    this.form.set({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
   }
 
   save() {
-    if (!this.form.name || !this.form.apiUrl || !this.form.token) {
+    const f = this.form();
+    if (!f.name || !f.apiUrl || !f.token) {
       this.snackBar.open('Name, API URL, and Token are required', 'Close', { duration: 3000 });
       return;
     }
     this.saving.set(true);
     const op = this.editingId()
-      ? this.service.update(this.editingId()!, this.form)
-      : this.service.create(this.form);
+      ? this.service.update(this.editingId()!, f)
+      : this.service.create(f);
 
     op.subscribe({
       next: () => {
@@ -201,7 +205,7 @@ export class ProvidersComponent {
 
   edit(p: any) {
     this.editingId.set(p.id);
-    this.form = { ...p, token: '' };
+    this.form.set({ ...p, token: '' });
     this.showForm.set(true);
   }
 

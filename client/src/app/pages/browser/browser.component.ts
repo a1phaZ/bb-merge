@@ -1,6 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +18,7 @@ import { GitBranch } from '../../shared/models/provider.model';
   selector: 'app-browser',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatTableModule, MatProgressBarModule, MatTooltipModule,
@@ -35,7 +34,7 @@ import { GitBranch } from '../../shared/models/provider.model';
         <div class="search-grid">
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.provider' | translate }}</mat-label>
-            <mat-select [(ngModel)]="selectedProviderId" (selectionChange)="clearResults()">
+            <mat-select [value]="selectedProviderId()" (selectionChange)="selectedProviderId.set($event.value); clearResults()">
               <mat-option [value]="">{{ 'browser.selectProvider' | translate }}</mat-option>
               @for (p of providers(); track p.id) {
                 <mat-option [value]="p.id">{{ p.name }} ({{ p.type }})</mat-option>
@@ -44,11 +43,11 @@ import { GitBranch } from '../../shared/models/provider.model';
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.project' | translate }}</mat-label>
-            <input matInput [(ngModel)]="project" placeholder="PROJ">
+            <input matInput [value]="project()" (input)="project.set($any($event).target.value)" placeholder="PROJ">
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.repository' | translate }}</mat-label>
-            <input matInput [(ngModel)]="repo" placeholder="my-repo">
+            <input matInput [value]="repo()" (input)="repo.set($any($event).target.value)" placeholder="my-repo">
           </mat-form-field>
         </div>
         <div class="search-actions">

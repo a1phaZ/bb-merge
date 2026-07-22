@@ -1,6 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,7 +24,7 @@ import { debounceTime, Subject } from 'rxjs';
   selector: 'app-history',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, RouterLink,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatPaginatorModule, MatSnackBarModule, MatTooltipModule,
@@ -49,7 +48,7 @@ import { debounceTime, Subject } from 'rxjs';
           <div class="filters">
             <mat-form-field appearance="fill" subscriptSizing="dynamic">
               <mat-label>{{ 'history.provider' | translate }}</mat-label>
-              <mat-select [(ngModel)]="filterProvider">
+              <mat-select [value]="filterProvider()" (selectionChange)="filterProvider.set($event.value)">
                 <mat-option value="">{{ 'history.all' | translate }}</mat-option>
                 @for (p of providers(); track p.id) {
                   <mat-option [value]="p.id">{{ p.name }}</mat-option>
@@ -59,7 +58,7 @@ import { debounceTime, Subject } from 'rxjs';
 
             <mat-form-field appearance="fill" subscriptSizing="dynamic">
               <mat-label>{{ 'history.search' | translate }}</mat-label>
-              <input matInput [(ngModel)]="filterSearch" (input)="searchChanged()" placeholder="project, repo, or branch">
+              <input matInput [value]="filterSearch()" (input)="filterSearch.set($any($event).target.value); searchChanged()" placeholder="project, repo, or branch">
             </mat-form-field>
           </div>
         </mat-card-content>
@@ -199,8 +198,8 @@ export class HistoryComponent {
   limit = signal(50);
   total = signal(0);
   items = signal<HistoryRecord[]>([]);
-  filterProvider = '';
-  filterSearch = '';
+  filterProvider = signal('');
+  filterSearch = signal('');
   expandedId = signal<string | null>(null);
   detail = signal<HistoryRecord | null>(null);
 
@@ -224,8 +223,8 @@ export class HistoryComponent {
     this.historyService.getList({
       page: this.page() + 1,
       limit: this.limit(),
-      providerId: this.filterProvider || undefined,
-      search: this.filterSearch || undefined,
+      providerId: this.filterProvider() || undefined,
+      search: this.filterSearch() || undefined,
     }).subscribe({
       next: (result) => {
         this.items.set(result.items);
