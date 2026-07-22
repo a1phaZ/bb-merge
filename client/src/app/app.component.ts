@@ -129,7 +129,7 @@ import { UiSettingsService } from './core/services/ui-settings.service';
     mat-toolbar { position: sticky; top: 0; z-index: 100; }
     mat-drawer-container { flex: 1; }
     mat-drawer { width: 260px; transition: width 0.2s ease; overflow: hidden; }
-    mat-drawer.collapsed { width: 64px; }
+    mat-drawer.collapsed { width: 72px; }
     mat-drawer.collapsed .mat-icon { margin: 0 auto; }
     mat-drawer-content { min-height: calc(100vh - 64px); }
     .active-link { background: rgba(63, 81, 181, 0.12); }
