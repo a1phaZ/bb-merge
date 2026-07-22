@@ -10,6 +10,8 @@
   "nav.scheduler": "Scheduler",
   "nav.users": "Users",
   "nav.settings": "Settings",
+  "nav.collapse": "Collapse sidebar",
+  "nav.expand": "Expand sidebar",
 
   "dashboard.title": "Dashboard",
   "dashboard.totalMRs": "Total Merge Requests",

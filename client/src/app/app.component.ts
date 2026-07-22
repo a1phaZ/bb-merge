@@ -21,7 +21,8 @@ import { UiSettingsService } from './core/services/ui-settings.service';
   ],
   template: `
     <mat-toolbar color="primary">
-      <button mat-icon-button (click)="drawerOpen.set(!drawerOpen())">
+      <button mat-icon-button (click)="drawerExpanded.set(!drawerExpanded())"
+        matTooltip="{{ drawerExpanded() ? ('nav.collapse' | translate) : ('nav.expand' | translate) }}">
         <mat-icon>menu</mat-icon>
       </button>
       <span>Merge Request Creator</span>
@@ -32,63 +33,86 @@ import { UiSettingsService } from './core/services/ui-settings.service';
     </mat-toolbar>
 
     <mat-drawer-container>
-      <mat-drawer [opened]="drawerOpen()" mode="side" disableClose>
+      <mat-drawer [opened]="true" mode="side" disableClose
+        [class.collapsed]="!drawerExpanded()">
         <mat-nav-list>
           <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.dashboard' | translate) : '' }}">
             <mat-icon matListItemIcon>dashboard</mat-icon>
-            <span matListItemTitle>{{ 'nav.dashboard' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.dashboard' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/providers" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.providers' | translate) : '' }}">
             <mat-icon matListItemIcon>cloud</mat-icon>
-            <span matListItemTitle>{{ 'nav.providers' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.providers' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/merge-request/new" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.newMr' | translate) : '' }}">
             <mat-icon matListItemIcon>merge</mat-icon>
-            <span matListItemTitle>{{ 'nav.newMr' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.newMr' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/history" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.history' | translate) : '' }}">
             <mat-icon matListItemIcon>history</mat-icon>
-            <span matListItemTitle>{{ 'nav.history' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.history' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/templates" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.templates' | translate) : '' }}">
             <mat-icon matListItemIcon>description</mat-icon>
-            <span matListItemTitle>{{ 'nav.templates' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.templates' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/browser" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.browser' | translate) : '' }}">
             <mat-icon matListItemIcon>account_tree</mat-icon>
-            <span matListItemTitle>{{ 'nav.browser' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.browser' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/webhooks" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.webhooks' | translate) : '' }}">
             <mat-icon matListItemIcon>webhook</mat-icon>
-            <span matListItemTitle>{{ 'nav.webhooks' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.webhooks' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/logs" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.logs' | translate) : '' }}">
             <mat-icon matListItemIcon>terminal</mat-icon>
-            <span matListItemTitle>{{ 'nav.logs' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.logs' | translate }}</span>
+            }
           </a>
           <mat-divider></mat-divider>
           <a mat-list-item routerLink="/scheduler" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.scheduler' | translate) : '' }}">
             <mat-icon matListItemIcon>schedule</mat-icon>
-            <span matListItemTitle>{{ 'nav.scheduler' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.scheduler' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/admin/users" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.users' | translate) : '' }}">
             <mat-icon matListItemIcon>people</mat-icon>
-            <span matListItemTitle>{{ 'nav.users' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.users' | translate }}</span>
+            }
           </a>
           <a mat-list-item routerLink="/settings" routerLinkActive="active-link"
-             (click)="drawerOpen.set(false)">
+            matTooltip="{{ !drawerExpanded() ? ('nav.settings' | translate) : '' }}">
             <mat-icon matListItemIcon>settings</mat-icon>
-            <span matListItemTitle>{{ 'nav.settings' | translate }}</span>
+            @if (drawerExpanded()) {
+              <span matListItemTitle>{{ 'nav.settings' | translate }}</span>
+            }
           </a>
         </mat-nav-list>
       </mat-drawer>
@@ -104,14 +128,16 @@ import { UiSettingsService } from './core/services/ui-settings.service';
     :host { display: flex; flex-direction: column; height: 100vh; }
     mat-toolbar { position: sticky; top: 0; z-index: 100; }
     mat-drawer-container { flex: 1; }
-    mat-drawer { width: 260px; }
+    mat-drawer { width: 260px; transition: width 0.2s ease; overflow: hidden; }
+    mat-drawer.collapsed { width: 64px; }
+    mat-drawer.collapsed .mat-icon { margin: 0 auto; }
     mat-drawer-content { min-height: calc(100vh - 64px); }
     .active-link { background: rgba(63, 81, 181, 0.12); }
     .active-link .mat-icon { color: #3f51b5; }
   `,
 })
 export class AppComponent {
-  drawerOpen = signal(true);
+  drawerExpanded = signal(true);
   private uiSettings = inject(UiSettingsService);
 
   constructor() {

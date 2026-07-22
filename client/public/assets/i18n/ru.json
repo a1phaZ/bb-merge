@@ -10,6 +10,8 @@
   "nav.scheduler": "Планировщик",
   "nav.users": "Пользователи",
   "nav.settings": "Настройки",
+  "nav.collapse": "Свернуть панель",
+  "nav.expand": "Развернуть панель",
 
   "dashboard.title": "Панель",
   "dashboard.totalMRs": "Всего MR",
