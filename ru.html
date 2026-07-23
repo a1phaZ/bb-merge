@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Request Manager — Создавайте 50 MR за 5 секунд</title>
+  <meta name="description" content="Массовое создание merge request для GitLab, GitHub и Bitbucket. Auto-merge, dry-run, шаблоны, история — всё в одном дашборде.">
+  <meta name="keywords" content="merge request, pull request, gitlab, github, bitbucket, автоматизация, девопс, релиз">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Merge Request Manager — Создавайте 50 MR за 5 секунд">
+  <meta property="og:description" content="Массовое создание merge request для GitLab, GitHub и Bitbucket. Auto-merge, dry-run, шаблоны, история.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://a1phaZ.github.io/bb-merge/ru.html">
+  <meta property="og:image" content="https://a1phaZ.github.io/bb-merge/images/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Merge Request Manager">
+  <meta name="twitter:description" content="Массовое создание merge request для GitLab, GitHub и Bitbucket.">
+
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="en" href="https://a1phaZ.github.io/bb-merge/index.html">
+  <link rel="alternate" hreflang="ru" href="https://a1phaZ.github.io/bb-merge/ru.html">
+  <link rel="canonical" href="https://a1phaZ.github.io/bb-merge/ru.html">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Merge Request Manager",
+    "description": "Инструмент массового создания merge request для GitLab, GitHub и Bitbucket с auto-merge, dry-run, шаблонами и историей.",
+    "url": "https://github.com/a1phaZ/bb-merge",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Cross-platform",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">MR Manager</div>
+    <nav>
+      <a href="#features">Возможности</a>
+      <a href="#how-it-works">Как работает</a>
+      <a href="#testimonials">Отзывы</a>
+      <a href="https://github.com/a1phaZ/bb-merge" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <a href="index.html" class="lang-link">EN</a>
+  </header>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-content">
+      <h1>Создавайте <span class="highlight">50 Merge Request</span> за 5 секунд</h1>
+      <p class="hero-subtitle">Хватит открывать вкладки. Вставьте список веток, выберите цель — и инструмент сделает всю работу сам. Поддерживает GitLab, GitHub и Bitbucket.</p>
+      <a href="https://github.com/a1phaZ/bb-merge" target="_blank" rel="noopener" class="btn-primary">Попробовать на GitHub →</a>
+      <div class="hero-stats">
+        <span>⚡ Open Source</span>
+        <span>🔒 Шифрование токенов</span>
+        <span>🐳 Готов к Docker</span>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="images/hero-placeholder.svg" alt="Merge Request Manager — предпросмотр дашборда" loading="lazy">
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <h2>Почему это удобно</h2>
+    <p class="section-subtitle">Четыре фичи, которые делают релизы весёлыми.</p>
+    <div class="features-grid">
+      <article class="feature-card">
+        <img src="images/feature-create.svg" alt="Массовое создание MR" loading="lazy">
+        <h3>50 MR одной вставкой</h3>
+        <p>Скопируйте список веток в текстовое поле, выберите цель — и инструмент создаст merge request для каждой. Никакого бесконечного кликанья.</p>
+      </article>
+      <article class="feature-card">
+        <img src="images/feature-providers.svg" alt="Поддержка нескольких провайдеров" loading="lazy">
+        <h3>GitLab · GitHub · Bitbucket</h3>
+        <p>Один дашборд, три провайдера. Одинаковый интерфейс, одинаковая логика. Никаких переключений между разными интерфейсами.</p>
+      </article>
+      <article class="feature-card">
+        <img src="images/hero-placeholder.svg" alt="Auto-merge и dry-run" loading="lazy">
+        <h3>Auto-merge для ленивых, Dry-Run для параноиков</h3>
+        <p>Проверьте конфигурацию тестовым прогоном. Потом нажмите auto-merge — и пусть система делает всё сама. Мы не осуждаем, мы автоматизируем.</p>
+      </article>
+      <article class="feature-card">
+        <img src="images/feature-history.svg" alt="Шаблоны и история" loading="lazy">
+        <h3>Шаблоны + История = Ноль повторений</h3>
+        <p>Сохраните конфигурацию проекта как шаблон один раз. Воспроизведите любой MR из истории одним кликом. Идеально для пятничных hotfix'ов, когда мозг уже выключен.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works">
+    <h2>Как это работает</h2>
+    <p class="section-subtitle">Три шага. И всё.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Добавьте провайдера</h3>
+        <p>Подключите GitLab, GitHub или Bitbucket. Введите API URL и токен — один раз. Они зашифрованы, мы их не видим.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Вставьте ветки</h3>
+        <p>5 веток? 50 веток? Вставьте все сразу. Можно загрузить список веток напрямую из репозитория.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Нажмите кнопку</h3>
+        <p>Нажмите «Создать» — или запустите dry-run, чтобы сначала проверить. Наблюдайте за прогрессом в реальном времени и получите отчёт.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section id="testimonials">
+    <h2>Что говорят люди</h2>
+    <p class="section-subtitle">Вымышленные цитаты о вполне реальных проблемах.</p>
+    <div class="carousel-container">
+      <div class="carousel" id="carousel">
+        <div class="carousel-track" id="carouselTrack">
+          <blockquote class="testimonial-card">
+            <p>«Релизы стали в 3 раза быстрее. Вставил 20 веток — получил 20 MR за секунду. Чистая магия.»</p>
+            <footer>— Алексей К., <span>Team Lead</span></footer>
+          </blockquote>
+          <blockquote class="testimonial-card">
+            <p>«Наконец-то один инструмент для GitLab, GitHub и Bitbucket. Никаких переключений между тремя интерфейсами.»</p>
+            <footer>— Мария С., <span>DevOps Engineer</span></footer>
+          </blockquote>
+          <blockquote class="testimonial-card">
+            <p>«Dry-run уже дважды спас от мержа не в ту ветку. Бесценная штука.»</p>
+            <footer>— Дмитрий В., <span>Senior Developer</span></footer>
+          </blockquote>
+          <blockquote class="testimonial-card">
+            <p>«Шаблоны — просто спасение для наших релизов. Один клик — и весь релизный пайплайн настроен. Невероятно удобно.»</p>
+            <footer>— Елена П., <span>Engineering Manager</span></footer>
+          </blockquote>
+          <blockquote class="testimonial-card">
+            <p>«Свой сервер, шифрование токенов, работает в Docker. Всё, что я хотел от такого инструмента, и ничего лишнего.»</p>
+            <footer>— Иван Р., <span>Open Source Contributor</span></footer>
+          </blockquote>
+        </div>
+      </div>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <button class="carousel-btn carousel-prev" id="prevBtn" aria-label="Предыдущий">←</button>
+      <button class="carousel-btn carousel-next" id="nextBtn" aria-label="Следующий">→</button>
+    </div>
+  </section>
+
+  <!-- Providers -->
+  <section id="providers">
+    <h2>Поддерживаемые провайдеры</h2>
+    <p class="section-subtitle">Мы дружим со всеми.</p>
+    <div class="provider-logos">
+      <div class="provider-logo">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="8" fill="#FC6D26"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="14" font-weight="bold">GL</text></svg>
+        <span>GitLab</span>
+      </div>
+      <div class="provider-logo">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="8" fill="#24292F"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="14" font-weight="bold">GH</text></svg>
+        <span>GitHub</span>
+      </div>
+      <div class="provider-logo">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="8" fill="#0052CC"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="12" font-weight="bold">BB</text></svg>
+        <span>Bitbucket</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open Source -->
+  <section id="opensource">
+    <div class="oss-card">
+      <h2>Open Source. Всегда.</h2>
+      <p>MIT-лицензия, свой сервер, полная прозрачность. Форкните, доработайте, сделайте своим. Код на GitHub — загляните, поставьте звёздочку.</p>
+      <a href="https://github.com/a1phaZ/bb-merge" target="_blank" rel="noopener" class="btn-secondary">На GitHub ⭐</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Merge Request Manager · Open Source · MIT License</p>
+    <a href="https://github.com/a1phaZ/bb-merge" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+  <script src="scripts.js"></script>
+</body>
+</html>

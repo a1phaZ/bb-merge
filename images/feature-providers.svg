@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220">
+  <rect width="400" height="220" rx="8" fill="#f0f2ff"/>
+  <rect x="30" y="30" width="340" height="36" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <circle cx="55" cy="48" r="10" fill="#FC6D26" opacity="0.4"/>
+  <rect x="80" y="41" width="60" height="14" rx="4" fill="#667eea" opacity="0.2"/>
+  <rect x="30" y="80" width="340" height="36" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <circle cx="55" cy="98" r="10" fill="#24292F" opacity="0.4"/>
+  <rect x="80" y="91" width="60" height="14" rx="4" fill="#667eea" opacity="0.2"/>
+  <rect x="30" y="130" width="340" height="36" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <circle cx="55" cy="148" r="10" fill="#0052CC" opacity="0.4"/>
+  <rect x="80" y="141" width="60" height="14" rx="4" fill="#667eea" opacity="0.2"/>
+  <text x="200" y="205" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#667eea" opacity="0.4">Provider List</text>
+</svg>
