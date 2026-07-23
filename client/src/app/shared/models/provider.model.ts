@@ -23,8 +23,8 @@ export interface ProviderCreate {
   type: string;
   apiUrl: string;
   token: string;
-  defaultTarget?: string;
-  defaultTitlePrefix?: string;
+  defaultTarget: string;
+  defaultTitlePrefix: string;
   defaultProject?: string;
   defaultRepo?: string;
 }

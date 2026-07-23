@@ -316,7 +316,7 @@ export class ProvidersComponent {
 
   edit(p: any) {
     this.editingId.set(p.id);
-    this.providerModel.set({ ...p, token: '' });
+    this.providerModel.set({ ...p, token: '', defaultTarget: p.defaultTarget || 'main', defaultTitlePrefix: p.defaultTitlePrefix || 'Merge' });
     if (p.defaultProject && p.defaultRepo) {
       const repo: RepoInfo = { project: p.defaultProject, name: p.defaultRepo, fullName: `${p.defaultProject}/${p.defaultRepo}` };
       this.repos.set([repo]);
