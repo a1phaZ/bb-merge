@@ -55,6 +55,9 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
               <input matInput [value]="form().apiUrl" (input)="updateForm('apiUrl', $any($event).target.value)" placeholder="https://bitbucket.example.com">
+              @if (apiUrlError()) {
+                <mat-error>{{ apiUrlError() }}</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.token' | translate }}</mat-label>
@@ -222,8 +225,21 @@ export class ProvidersComponent {
   columns = ['name', 'type', 'apiUrl', 'defaultTarget', 'actions'];
 
   form = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
+  apiUrlTouched = signal(false);
+
+  apiUrlError = computed(() => {
+    const url = this.form().apiUrl;
+    if (!url || !this.apiUrlTouched()) return null;
+    try {
+      new URL(url);
+      return null;
+    } catch {
+      return 'Invalid URL';
+    }
+  });
 
   protected updateForm(key: string, value: string) {
+    if (key === 'apiUrl') this.apiUrlTouched.set(true);
     this.form.update(f => ({ ...f, [key]: value }));
   }
 
