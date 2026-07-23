@@ -57,10 +57,10 @@ describe('MergeRequestNewComponent', () => {
 
   it('should have default form values', () => {
     const comp = fixture.componentInstance;
-    expect(comp.form().target).toBe('main');
-    expect(comp.form().strategy).toBe('merge');
-    expect(comp.form().autoMerge).toBe(false);
-    expect(comp.form().dryRun).toBe(false);
+    expect(comp.mrModel().target).toBe('main');
+    expect(comp.mrModel().strategy).toBe('merge');
+    expect(comp.mrModel().autoMerge).toBe(false);
+    expect(comp.mrModel().dryRun).toBe(false);
   });
 
   it('should provide provider list from service', () => {
@@ -69,10 +69,10 @@ describe('MergeRequestNewComponent', () => {
     expect(comp.providers()[0].name).toBe('GitHub');
   });
 
-  it('should update form field', () => {
+  it('should update model field', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('project', 'my-project');
-    expect(comp.form().project).toBe('my-project');
+    comp.mrModel.update(f => ({ ...f, project: 'my-project' }));
+    expect(comp.mrModel().project).toBe('my-project');
   });
 
   it('should parse branches from text', () => {
@@ -88,9 +88,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should load branches from API', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.loadBranches();
 
     expect(apiMock.getBranches).toHaveBeenCalledWith('p1', 'proj', 'repo');
@@ -106,9 +104,7 @@ describe('MergeRequestNewComponent', () => {
   it('should handle branch load error', () => {
     apiMock.getBranches.mockReturnValue(throwError(() => new Error('fail')));
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.loadBranches();
 
     expect(comp.loadingBranches()).toBe(false);
@@ -143,9 +139,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should execute and create merge request', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.execute();
@@ -160,9 +154,7 @@ describe('MergeRequestNewComponent', () => {
   it('should handle execute error', () => {
     mrServiceMock.create.mockReturnValue(throwError(() => new Error('fail')));
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.execute();
@@ -173,9 +165,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should show progress events after execute', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.execute();
@@ -187,9 +177,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should set progressDone on done event', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.execute();
@@ -222,9 +210,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should save as template', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.saveAsTemplate();
@@ -239,9 +225,7 @@ describe('MergeRequestNewComponent', () => {
   it('should handle save template error', () => {
     templatesMock.create.mockReturnValue(throwError(() => new Error('fail')));
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.saveAsTemplate();
@@ -250,10 +234,10 @@ describe('MergeRequestNewComponent', () => {
 
   it('should switch from dry run to real mode', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('dryRun', true);
+    comp.mrModel.update(f => ({ ...f, dryRun: true }));
     comp.switchToReal();
 
-    expect(comp.form().dryRun).toBe(false);
+    expect(comp.mrModel().dryRun).toBe(false);
     expect(comp.step()).toBe('form');
   });
 
@@ -270,15 +254,13 @@ describe('MergeRequestNewComponent', () => {
     expect(comp.events().length).toBe(0);
     expect(comp.progressDone()).toBe(false);
     expect(comp.branchesText()).toBe('');
-    expect(comp.form().providerId).toBe('');
-    expect(comp.form().target).toBe('main');
+    expect(comp.mrModel().providerId).toBe('');
+    expect(comp.mrModel().target).toBe('main');
   });
 
   it('should compute canExecute', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     expect(comp.canExecute()).toBe(true);
@@ -291,9 +273,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should render progress step after execute', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
     comp.branchesText.set('feature1');
 
     comp.execute();
@@ -304,10 +284,7 @@ describe('MergeRequestNewComponent', () => {
 
   it('should show dry run badge during dry run', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('providerId', 'p1');
-    comp.updateForm('project', 'proj');
-    comp.updateForm('repo', 'repo');
-    comp.updateForm('dryRun', true);
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo', dryRun: true }));
     comp.branchesText.set('feature1');
 
     comp.execute();

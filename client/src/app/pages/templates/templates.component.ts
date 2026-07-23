@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { form, required, FormField } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,11 +17,24 @@ import { ApiService } from '../../core/services/api.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { Template } from '../../shared/models/template.model';
 
+interface TemplateFormData {
+  name: string;
+  providerId: string;
+  project: string;
+  repo: string;
+  target: string;
+  branchesJson: string;
+  titlePrefix: string;
+  description: string;
+  autoMerge: boolean;
+  strategy: string;
+}
+
 @Component({
   selector: 'app-templates',
   standalone: true,
   imports: [
-    CommonModule, RouterLink,
+    CommonModule, RouterLink, FormField,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSlideToggleModule, MatSnackBarModule, MatTooltipModule,
@@ -43,11 +57,16 @@ import { Template } from '../../shared/models/template.model';
           <div class="form-grid">
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.name' | translate }}</mat-label>
-              <input matInput [value]="form().name" (input)="updateForm('name', $any($event).target.value)" placeholder="Deploy to staging">
+              <input matInput [formField]="templateForm.name" placeholder="Deploy to staging">
+              @if (templateForm.name().touched() && templateForm.name().invalid()) {
+                @for (err of templateForm.name().errors(); track err.kind) {
+                  <mat-error>{{ err.message }}</mat-error>
+                }
+              }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.provider' | translate }}</mat-label>
-              <mat-select [value]="form().providerId" (selectionChange)="updateForm('providerId', $event.value)">
+              <mat-select [formField]="templateForm.providerId">
                 <mat-option value="">{{ 'templates.any' | translate }}</mat-option>
                 @for (p of providers(); track p.id) {
                   <mat-option [value]="p.id">{{ p.name }}</mat-option>
@@ -56,15 +75,20 @@ import { Template } from '../../shared/models/template.model';
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.project' | translate }}</mat-label>
-              <input matInput [value]="form().project" (input)="updateForm('project', $any($event).target.value)">
+              <input matInput [formField]="templateForm.project">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.repository' | translate }}</mat-label>
-              <input matInput [value]="form().repo" (input)="updateForm('repo', $any($event).target.value)">
+              <input matInput [formField]="templateForm.repo">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.targetBranch' | translate }}</mat-label>
-              <input matInput [value]="form().target" (input)="updateForm('target', $any($event).target.value)" placeholder="main">
+              <input matInput [formField]="templateForm.target" placeholder="main">
+              @if (templateForm.target().touched() && templateForm.target().invalid()) {
+                @for (err of templateForm.target().errors(); track err.kind) {
+                  <mat-error>{{ err.message }}</mat-error>
+                }
+              }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.branches' | translate }}</mat-label>
@@ -72,21 +96,21 @@ import { Template } from '../../shared/models/template.model';
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.titlePrefix' | translate }}</mat-label>
-              <input matInput [value]="form().titlePrefix" (input)="updateForm('titlePrefix', $any($event).target.value)" placeholder="Merge">
+              <input matInput [formField]="templateForm.titlePrefix" placeholder="Merge">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'templates.strategy' | translate }}</mat-label>
-              <mat-select [value]="form().strategy" (selectionChange)="updateForm('strategy', $event.value)">
+              <mat-select [formField]="templateForm.strategy">
                 <mat-option value="merge">{{ 'templates.mergeCommit' | translate }}</mat-option>
                 <mat-option value="squash">{{ 'templates.squash' | translate }}</mat-option>
                 <mat-option value="fast-forward">{{ 'templates.fastForward' | translate }}</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
-          <mat-slide-toggle [checked]="form().autoMerge" (change)="updateForm('autoMerge', $event.checked)" class="mt-16">{{ 'templates.autoMerge' | translate }}</mat-slide-toggle>
+          <mat-slide-toggle [formField]="templateForm.autoMerge" class="mt-16">{{ 'templates.autoMerge' | translate }}</mat-slide-toggle>
           <div class="form-actions mt-16">
             <button mat-button (click)="cancelForm()">{{ 'templates.cancel' | translate }}</button>
-            <button mat-raised-button color="primary" (click)="save()" [disabled]="!form().name || !form().target">
+            <button mat-raised-button color="primary" (click)="save()" [disabled]="!templateModel().name || !templateModel().target">
               {{ editingId() ? ('templates.update' | translate) : ('templates.create' | translate) }}
             </button>
           </div>
@@ -169,19 +193,26 @@ export class TemplatesComponent {
   editingId = signal<string | null>(null);
   formBranches = signal('');
 
-  form = signal<Partial<Template>>({
+  templateModel = signal<TemplateFormData>({
     name: '', providerId: '', project: '', repo: '', target: 'main',
     branchesJson: '', titlePrefix: 'Merge', description: '',
     autoMerge: false, strategy: 'merge',
   });
 
-  protected updateForm(key: string, value: string | boolean) {
-    this.form.update(f => ({ ...f, [key]: value }));
-  }
+  templateForm = form(this.templateModel, (s) => {
+    required(s.name, { message: 'Name is required' });
+    required(s.target, { message: 'Target branch is required' });
+  });
+
+  private defaults: TemplateFormData = {
+    name: '', providerId: '', project: '', repo: '', target: 'main',
+    branchesJson: '', titlePrefix: 'Merge', description: '',
+    autoMerge: false, strategy: 'merge',
+  };
 
   openCreate() {
     this.editingId.set(null);
-    this.form.set({ name: '', providerId: '', project: '', repo: '', target: 'main', branchesJson: '', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge' });
+    this.templateModel.set({ ...this.defaults });
     this.formBranches.set('');
     this.showForm.set(true);
   }
@@ -192,9 +223,9 @@ export class TemplatesComponent {
   }
 
   save() {
-    const f = this.form();
+    const f = this.templateModel();
     const fb = this.formBranches();
-    const data: Partial<Template> = {
+    const data: Record<string, any> = {
       ...f,
       branchesJson: fb ? JSON.stringify(fb.split('\n').map(b => b.trim()).filter(Boolean)) : undefined,
     };
@@ -214,7 +245,18 @@ export class TemplatesComponent {
 
   editTemplate(t: Template) {
     this.editingId.set(t.id);
-    this.form.set({ ...t });
+    this.templateModel.set({
+      name: t.name || '',
+      providerId: t.providerId || '',
+      project: t.project || '',
+      repo: t.repo || '',
+      target: t.target || 'main',
+      branchesJson: t.branchesJson || '',
+      titlePrefix: t.titlePrefix || 'Merge',
+      description: t.description || '',
+      autoMerge: t.autoMerge ?? false,
+      strategy: t.strategy || 'merge',
+    });
     this.formBranches.set(t.branchesJson ? JSON.parse(t.branchesJson).join('\n') : '');
     this.showForm.set(true);
   }

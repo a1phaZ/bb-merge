@@ -79,10 +79,10 @@ describe('TemplatesComponent', () => {
     expect(comp.editingId()).toBeNull();
   });
 
-  it('should update form field', () => {
+  it('should update model field', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('name', 'New template');
-    expect(comp.form().name).toBe('New template');
+    comp.templateModel.update(f => ({ ...f, name: 'New template' }));
+    expect(comp.templateModel().name).toBe('New template');
   });
 
   it('should save new template', () => {

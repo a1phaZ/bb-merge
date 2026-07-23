@@ -42,16 +42,14 @@ describe('BrowserComponent', () => {
 
   it('should disable load button when fields empty', () => {
     const comp = fixture.componentInstance;
-    expect(comp.selectedProviderId()).toBe('');
+    expect(comp.browserModel().providerId).toBe('');
     const btn = fixture.nativeElement.querySelector('button[color="primary"]');
     expect(btn.disabled).toBe(true);
   });
 
   it('should load branches', () => {
     const comp = fixture.componentInstance;
-    comp.selectedProviderId.set('p1');
-    comp.project.set('proj');
-    comp.repo.set('repo');
+    comp.browserModel.set({ providerId: 'p1', project: 'proj', repo: 'repo' });
     apiMock.getBranches.mockReturnValue(of([{ displayId: 'main', latestCommit: 'abc123' }]));
     comp.loadBranches();
 
@@ -63,9 +61,7 @@ describe('BrowserComponent', () => {
 
   it('should handle branch load error', () => {
     const comp = fixture.componentInstance;
-    comp.selectedProviderId.set('p1');
-    comp.project.set('proj');
-    comp.repo.set('repo');
+    comp.browserModel.set({ providerId: 'p1', project: 'proj', repo: 'repo' });
     apiMock.getBranches.mockReturnValue(throwError(() => ({ message: 'API error' })));
     comp.loadBranches();
 

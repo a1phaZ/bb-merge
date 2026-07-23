@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { form, FormField } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +19,7 @@ import { GitBranch } from '../../shared/models/provider.model';
   selector: 'app-browser',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, FormField,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatTableModule, MatProgressBarModule, MatTooltipModule,
@@ -34,7 +35,7 @@ import { GitBranch } from '../../shared/models/provider.model';
         <div class="search-grid">
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.provider' | translate }}</mat-label>
-            <mat-select [value]="selectedProviderId()" (selectionChange)="selectedProviderId.set($event.value); clearResults()">
+            <mat-select [formField]="browserForm.providerId" (selectionChange)="clearResults()">
               <mat-option [value]="">{{ 'browser.selectProvider' | translate }}</mat-option>
               @for (p of providers(); track p.id) {
                 <mat-option [value]="p.id">{{ p.name }} ({{ p.type }})</mat-option>
@@ -43,16 +44,16 @@ import { GitBranch } from '../../shared/models/provider.model';
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.project' | translate }}</mat-label>
-            <input matInput [value]="project()" (input)="project.set($any($event).target.value)" placeholder="PROJ">
+            <input matInput [formField]="browserForm.project" placeholder="PROJ">
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>{{ 'browser.repository' | translate }}</mat-label>
-            <input matInput [value]="repo()" (input)="repo.set($any($event).target.value)" placeholder="my-repo">
+            <input matInput [formField]="browserForm.repo" placeholder="my-repo">
           </mat-form-field>
         </div>
         <div class="search-actions">
           <button mat-raised-button color="primary" (click)="loadBranches()"
-            [disabled]="!selectedProviderId() || !project() || !repo() || loading()">
+            [disabled]="!browserModel().providerId || !browserModel().project || !browserModel().repo || loading()">
             <mat-icon>account_tree</mat-icon> {{ 'browser.load' | translate }}
           </button>
         </div>
@@ -140,9 +141,8 @@ export class BrowserComponent {
 
   providers = computed(() => this.api.providers.value() ?? []);
 
-  selectedProviderId = signal('');
-  project = signal('');
-  repo = signal('');
+  browserModel = signal({ providerId: '', project: '', repo: '' });
+  browserForm = form(this.browserModel);
 
   branches = signal<GitBranch[]>([]);
   loading = signal(false);
@@ -156,16 +156,14 @@ export class BrowserComponent {
   }
 
   loadBranches() {
-    const providerId = this.selectedProviderId();
-    const project = this.project();
-    const repo = this.repo();
-    if (!providerId || !project || !repo) return;
+    const f = this.browserModel();
+    if (!f.providerId || !f.project || !f.repo) return;
 
     this.loading.set(true);
     this.error.set(null);
     this.branches.set([]);
 
-    this.api.getBranches(providerId, project, repo).subscribe({
+    this.api.getBranches(f.providerId, f.project, f.repo).subscribe({
       next: (branches) => {
         this.branches.set(branches);
         this.loaded.set(true);

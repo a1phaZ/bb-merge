@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { form, required, FormField } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,11 +20,25 @@ import { HistoryRecord } from '../../shared/models/history.model';
 import { ProgressEvent } from '../../shared/models/merge-result.model';
 import { Subscription } from 'rxjs';
 
+interface MrFormData {
+  providerId: string;
+  project: string;
+  repo: string;
+  target: string;
+  titlePrefix: string;
+  description: string;
+  autoMerge: boolean;
+  strategy: string;
+  dryRun: boolean;
+  webhookUrl: string;
+  webhookEvents: string[];
+}
+
 @Component({
   selector: 'app-merge-request-new',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, FormField,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule, MatExpansionModule,
@@ -39,7 +54,7 @@ import { Subscription } from 'rxjs';
             <div class="form-grid">
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.provider' | translate }}</mat-label>
-                <mat-select [value]="form().providerId" (selectionChange)="onProviderChange($event.value)">
+                <mat-select [formField]="mrForm.providerId" (selectionChange)="onProviderChange()">
                   @for (p of providers(); track p.id) {
                     <mat-option [value]="p.id">
                       {{ p.name }} ({{ p.type }})
@@ -50,23 +65,23 @@ import { Subscription } from 'rxjs';
 
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.project' | translate }}</mat-label>
-                <input matInput [value]="form().project" (input)="updateForm('project', $any($event).target.value)" placeholder="MY_PROJECT">
+                <input matInput [formField]="mrForm.project" placeholder="MY_PROJECT">
               </mat-form-field>
 
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.repository' | translate }}</mat-label>
-                <input matInput [value]="form().repo" (input)="updateForm('repo', $any($event).target.value)" placeholder="my-repo">
+                <input matInput [formField]="mrForm.repo" placeholder="my-repo">
               </mat-form-field>
 
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.targetBranch' | translate }}</mat-label>
-                <input matInput [value]="form().target" (input)="updateForm('target', $any($event).target.value)" placeholder="main">
+                <input matInput [formField]="mrForm.target" placeholder="main">
               </mat-form-field>
             </div>
 
             <div class="load-branches-row mt-16">
               <button mat-stroked-button (click)="loadBranches()"
-                [disabled]="!form().providerId || !form().project || !form().repo || loadingBranches()">
+                [disabled]="!mrModel().providerId || !mrModel().project || !mrModel().repo || loadingBranches()">
                 <mat-icon>download</mat-icon>
                 {{ loadingBranches() ? ('mrNew.loading' | translate) : ('mrNew.loadBranches' | translate) }}
               </button>
@@ -95,12 +110,12 @@ import { Subscription } from 'rxjs';
             <div class="form-grid mt-16">
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.titlePrefix' | translate }}</mat-label>
-                <input matInput [value]="form().titlePrefix" (input)="updateForm('titlePrefix', $any($event).target.value)" placeholder="Merge">
+                <input matInput [formField]="mrForm.titlePrefix" placeholder="Merge">
               </mat-form-field>
 
               <mat-form-field appearance="fill">
                 <mat-label>{{ 'mrNew.strategy' | translate }}</mat-label>
-                <mat-select [value]="form().strategy" (selectionChange)="updateForm('strategy', $event.value)">
+                <mat-select [formField]="mrForm.strategy">
                   <mat-option value="merge">{{ 'mrNew.mergeCommit' | translate }}</mat-option>
                   <mat-option value="squash">{{ 'mrNew.squash' | translate }}</mat-option>
                   <mat-option value="fast-forward">{{ 'mrNew.fastForward' | translate }}</mat-option>
@@ -110,15 +125,15 @@ import { Subscription } from 'rxjs';
 
             <mat-form-field appearance="fill" class="full-width mt-16">
               <mat-label>{{ 'mrNew.description' | translate }}</mat-label>
-              <textarea matInput rows="3" [value]="form().description" (input)="updateForm('description', $any($event).target.value)" placeholder="Auto-created merge request"></textarea>
+              <textarea matInput rows="3" [formField]="mrForm.description" placeholder="Auto-created merge request"></textarea>
             </mat-form-field>
 
             <div class="toggle-row mt-16">
-              <mat-slide-toggle [checked]="form().autoMerge" (change)="updateForm('autoMerge', $event.checked)">{{ 'mrNew.autoMerge' | translate }}</mat-slide-toggle>
+              <mat-slide-toggle [formField]="mrForm.autoMerge">{{ 'mrNew.autoMerge' | translate }}</mat-slide-toggle>
             </div>
 
             <div class="toggle-row mt-16">
-              <mat-slide-toggle [checked]="form().dryRun" (change)="updateForm('dryRun', $event.checked)">{{ 'mrNew.dryRun' | translate }}</mat-slide-toggle>
+              <mat-slide-toggle [formField]="mrForm.dryRun">{{ 'mrNew.dryRun' | translate }}</mat-slide-toggle>
             </div>
 
             <mat-accordion class="mt-16">
@@ -129,7 +144,7 @@ import { Subscription } from 'rxjs';
                 </mat-expansion-panel-header>
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>{{ 'mrNew.webhookUrl' | translate }}</mat-label>
-                  <input matInput [value]="form().webhookUrl" (input)="updateForm('webhookUrl', $any($event).target.value)" placeholder="https://hooks.example.com/webhook">
+                  <input matInput [formField]="mrForm.webhookUrl" placeholder="https://hooks.example.com/webhook">
                 </mat-form-field>
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>{{ 'mrNew.events' | translate }}</mat-label>
@@ -140,10 +155,10 @@ import { Subscription } from 'rxjs';
             </mat-accordion>
 
             <div class="form-actions mt-16">
-              <button mat-raised-button [color]="form().dryRun ? 'accent' : 'primary'" (click)="execute()"
+              <button mat-raised-button [color]="mrModel().dryRun ? 'accent' : 'primary'" (click)="execute()"
                 [disabled]="!canExecute() || executing()" size="large">
-                <mat-icon>{{ form().dryRun ? 'science' : 'play_arrow' }}</mat-icon>
-                {{ executing() ? (form().dryRun ? ('mrNew.validating' | translate) : ('mrNew.creating' | translate)) : (form().dryRun ? ('mrNew.runDryRun' | translate) : ('mrNew.create' | translate)) }}
+                <mat-icon>{{ mrModel().dryRun ? 'science' : 'play_arrow' }}</mat-icon>
+                {{ executing() ? (mrModel().dryRun ? ('mrNew.validating' | translate) : ('mrNew.creating' | translate)) : (mrModel().dryRun ? ('mrNew.runDryRun' | translate) : ('mrNew.create' | translate)) }}
               </button>
             </div>
           </mat-card-content>
@@ -156,12 +171,12 @@ import { Subscription } from 'rxjs';
         <mat-card>
           <mat-card-content>
             <h3>
-              @if (form().dryRun) {
+              @if (mrModel().dryRun) {
                 {{ 'mrNew.validationTitle' | translate }}
               } @else {
                 {{ 'mrNew.creatingTitle' | translate }}
               }
-              @if (form().dryRun) {
+              @if (mrModel().dryRun) {
                 <span class="badge badge-dry">DRY RUN</span>
               }
             </h3>
@@ -187,12 +202,12 @@ import { Subscription } from 'rxjs';
 
             @if (progressDone()) {
               <div class="form-actions mt-16">
-                @if (form().dryRun) {
+                @if (mrModel().dryRun) {
                   <button mat-raised-button (click)="switchToReal()" color="primary">
                     <mat-icon>play_arrow</mat-icon> {{ 'mrNew.createReal' | translate }}
                   </button>
                 }
-                @if (!form().dryRun) {
+                @if (!mrModel().dryRun) {
                   <button mat-stroked-button (click)="copyReport()">
                     <mat-icon>content_copy</mat-icon> {{ 'mrNew.copyReport' | translate }}
                   </button>
@@ -255,18 +270,41 @@ export class MergeRequestNewComponent {
 
   providers = computed(() => this.api.providers.value() ?? []);
 
+  private defaults: MrFormData = {
+    providerId: '', project: '', repo: '', target: 'main',
+    titlePrefix: 'Merge', description: '', autoMerge: false,
+    strategy: 'merge', dryRun: false, webhookUrl: '', webhookEvents: [],
+  };
+
+  mrModel = signal<MrFormData>({ ...this.defaults });
+
+  mrForm = form(this.mrModel, (s) => {
+    required(s.providerId, { message: 'Provider is required' });
+    required(s.project, { message: 'Project is required' });
+    required(s.repo, { message: 'Repository is required' });
+  });
+
+  canExecute = computed(() => {
+    const f = this.mrModel();
+    const branches = this.parseBranches();
+    return !!(f.providerId && f.project && f.repo && f.target && branches.length > 0);
+  });
+
   constructor() {
     const nav = this.router.getCurrentNavigation();
     const config = (nav?.extras?.state as any)?.['config'] as HistoryRecord | undefined;
     if (config) {
-      this.updateForm('providerId', config.providerId || '');
-      this.updateForm('project', config.project || '');
-      this.updateForm('repo', config.repo || '');
-      this.updateForm('target', config.target || 'main');
-      this.updateForm('titlePrefix', (config as any).titlePrefix || 'Merge');
-      this.updateForm('description', (config as any).description || '');
-      this.updateForm('autoMerge', config.autoMerge || false);
-      this.updateForm('strategy', config.strategy || 'merge');
+      this.mrModel.update(f => ({
+        ...f,
+        providerId: config.providerId || '',
+        project: config.project || '',
+        repo: config.repo || '',
+        target: config.target || 'main',
+        titlePrefix: (config as any).titlePrefix || 'Merge',
+        description: (config as any).description || '',
+        autoMerge: config.autoMerge || false,
+        strategy: config.strategy || 'merge',
+      }));
       if (config.resultsJson) {
         try {
           const branches = JSON.parse(config.resultsJson);
@@ -281,46 +319,19 @@ export class MergeRequestNewComponent {
     }
   }
 
-  form = signal({
-    providerId: '',
-    project: '',
-    repo: '',
-    target: 'main',
-    titlePrefix: 'Merge',
-    description: '',
-    autoMerge: false,
-    strategy: 'merge',
-    dryRun: false,
-    webhookUrl: '',
-    webhookEvents: [] as string[],
-  });
-
-  protected updateForm(key: string, value: string | boolean | string[]) {
-    this.form.update(f => ({ ...f, [key]: value }));
-  }
-
-  protected onProviderChange(providerId: string) {
-    this.form.update(f => ({ ...f, providerId }));
+  protected onProviderChange() {
+    const providerId = this.mrModel().providerId;
     const provider = this.providers().find(p => p.id === providerId);
     if (provider) {
-      const updates: Record<string, string | boolean | string[]> = {};
-      if (provider.defaultProject) updates['project'] = provider.defaultProject;
-      if (provider.defaultRepo) updates['repo'] = provider.defaultRepo;
-      if (Object.keys(updates).length > 0) {
-        this.form.update(f => ({ ...f, ...updates }));
-      }
+      this.mrModel.update(f => ({
+        ...f,
+        project: provider.defaultProject || f.project,
+        repo: provider.defaultRepo || f.repo,
+      }));
     }
   }
 
   private sub: Subscription | null = null;
-
-  get canExecute() {
-    return computed(() => {
-      const f = this.form();
-      const branches = this.parseBranches();
-      return !!(f.providerId && f.project && f.repo && f.target && branches.length > 0);
-    });
-  }
 
   private parseBranches(): string[] {
     return this.branchesText().split('\n').map(b => b.trim()).filter(b => b.length > 0);
@@ -338,9 +349,9 @@ export class MergeRequestNewComponent {
     this.events.set([]);
     this.progressDone.set(false);
 
-    const f = this.form();
+    const f = this.mrModel();
     const webhookEvents = this.webhookEventsText().split(',').map(s => s.trim()).filter(s => s.length > 0);
-    this.updateForm('webhookEvents', webhookEvents);
+    this.mrModel.update(m => ({ ...m, webhookEvents }));
     const body = { ...f, branches, webhookEvents: webhookEvents.length > 0 ? webhookEvents : undefined };
 
     this.mrService.create(body).subscribe({
@@ -368,7 +379,7 @@ export class MergeRequestNewComponent {
   }
 
   loadBranches() {
-    const f = this.form();
+    const f = this.mrModel();
     if (!f.providerId || !f.project || !f.repo) return;
     this.loadingBranches.set(true);
     this.api.getBranches(f.providerId, f.project, f.repo).subscribe({
@@ -403,7 +414,7 @@ export class MergeRequestNewComponent {
   }
 
   saveAsTemplate() {
-    const f = this.form();
+    const f = this.mrModel();
     const branches = this.parseBranches();
     this.templatesService.create({
       name: `${f.project}/${f.repo} — ${f.target}`,
@@ -423,7 +434,7 @@ export class MergeRequestNewComponent {
   }
 
   switchToReal() {
-    this.updateForm('dryRun', false);
+    this.mrModel.update(f => ({ ...f, dryRun: false }));
     this.step.set('form');
     this.events.set([]);
     this.progressDone.set(false);
@@ -434,7 +445,7 @@ export class MergeRequestNewComponent {
     this.step.set('form');
     this.events.set([]);
     this.progressDone.set(false);
-    this.form.set({ providerId: '', project: '', repo: '', target: 'main', titlePrefix: 'Merge', description: '', autoMerge: false, strategy: 'merge', dryRun: false, webhookUrl: '', webhookEvents: [] });
+    this.mrModel.set({ ...this.defaults });
     this.branchesText.set('');
     this.webhookEventsText.set('');
     this.loadedBranches.set([]);
