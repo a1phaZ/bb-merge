@@ -58,6 +58,7 @@
   "providers.loadRepos": "Load Repositories",
   "providers.selectRepo": "Select repository",
   "providers.loading": "Loading...",
+  "providers.invalidUrl": "Enter a valid URL",
 
   "mrNew.title": "New Merge Request",
   "mrNew.provider": "Provider",

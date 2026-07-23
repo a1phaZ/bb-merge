@@ -58,6 +58,7 @@
   "providers.loadRepos": "Загрузить репозитории",
   "providers.selectRepo": "Выберите репозиторий",
   "providers.loading": "Загрузка...",
+  "providers.invalidUrl": "Введите корректный URL",
 
   "mrNew.title": "Новый MR",
   "mrNew.provider": "Провайдер",

@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormControl, ValidationErrors, AbstractControl } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,11 +16,17 @@ import { ProvidersService } from '../../core/services/providers.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
 
+function urlValidator(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+  try { new URL(control.value); return null; }
+  catch { return { url: true }; }
+}
+
 @Component({
   selector: 'app-providers',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, ReactiveFormsModule,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
     MatSnackBarModule, MatTooltipModule,
@@ -54,9 +61,9 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
-              <input matInput [value]="form().apiUrl" (input)="updateForm('apiUrl', $any($event).target.value)" placeholder="https://bitbucket.example.com">
-              @if (apiUrlError()) {
-                <mat-error>{{ apiUrlError() }}</mat-error>
+              <input matInput [formControl]="urlControl" placeholder="https://bitbucket.example.com">
+              @if (urlControl.invalid && urlControl.touched) {
+                <mat-error>{{ 'providers.invalidUrl' | translate }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="fill">
@@ -225,22 +232,25 @@ export class ProvidersComponent {
   columns = ['name', 'type', 'apiUrl', 'defaultTarget', 'actions'];
 
   form = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
-  apiUrlTouched = signal(false);
-
-  apiUrlError = computed(() => {
-    const url = this.form().apiUrl;
-    if (!url || !this.apiUrlTouched()) return null;
-    try {
-      new URL(url);
-      return null;
-    } catch {
-      return 'Invalid URL';
-    }
-  });
+  urlControl = new FormControl('', { validators: [urlValidator], updateOn: 'blur' });
+  private syncingUrl = false;
 
   protected updateForm(key: string, value: string) {
-    if (key === 'apiUrl') this.apiUrlTouched.set(true);
+    if (key === 'apiUrl' && !this.syncingUrl) {
+      this.syncingUrl = true;
+      this.urlControl.setValue(value as string, { emitEvent: false });
+      this.syncingUrl = false;
+    }
     this.form.update(f => ({ ...f, [key]: value }));
+  }
+
+  constructor() {
+    this.urlControl.valueChanges.subscribe(v => {
+      if (this.syncingUrl) return;
+      this.syncingUrl = true;
+      this.form.update(f => ({ ...f, apiUrl: v ?? '' }));
+      this.syncingUrl = false;
+    });
   }
 
   loadRepos() {
@@ -284,6 +294,9 @@ export class ProvidersComponent {
 
   private resetForm() {
     this.form.set({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
+    this.syncingUrl = true;
+    this.urlControl.reset('', { emitEvent: false });
+    this.syncingUrl = false;
     this.repos.set([]);
     this.filteredRepos.set([]);
     this.reposError.set(null);
@@ -314,6 +327,10 @@ export class ProvidersComponent {
   edit(p: any) {
     this.editingId.set(p.id);
     this.form.set({ ...p, token: '' });
+    this.syncingUrl = true;
+    this.urlControl.setValue(p.apiUrl || '', { emitEvent: false });
+    this.urlControl.markAsTouched();
+    this.syncingUrl = false;
     if (p.defaultProject && p.defaultRepo) {
       const repo: RepoInfo = { project: p.defaultProject, name: p.defaultRepo, fullName: `${p.defaultProject}/${p.defaultRepo}` };
       this.repos.set([repo]);
