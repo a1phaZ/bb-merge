@@ -78,18 +78,16 @@ describe('ProvidersComponent', () => {
     expect(comp.editingId()).toBeNull();
   });
 
-  it('should update form field', () => {
+  it('should update model field', () => {
     const comp = fixture.componentInstance;
-    comp.updateForm('name', 'NewProvider');
-    expect(comp.form().name).toBe('NewProvider');
+    comp.providerModel.update(f => ({ ...f, name: 'NewProvider' }));
+    expect(comp.providerModel().name).toBe('NewProvider');
   });
 
   it('should save new provider', () => {
     const comp = fixture.componentInstance;
     comp.showForm.set(true);
-    comp.updateForm('name', 'Test');
-    comp.updateForm('apiUrl', 'https://test.com');
-    comp.updateForm('token', 'tok');
+    comp.providerModel.update(f => ({ ...f, name: 'Test', apiUrl: 'https://test.com', token: 'tok' }));
     comp.save();
     expect(providersMock.create).toHaveBeenCalled();
   });

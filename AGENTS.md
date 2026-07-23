@@ -45,7 +45,7 @@ client/public/assets/
 ## Code Conventions
 - **Angular**: standalone components, `inject()` over constructor DI, signals
 - **Templates**: `@if` / `@for` control flow (not `*ngIf` / `*ngFor`). Material table microsyntax (`*matCellDef` etc.) is the only exception
-- **Forms** (Signal Forms via `model()`): form state as signals, two-way binding via `[value]` + event handlers **instead of** `[(ngModel)]`
+- **Forms** (Angular Signal Forms): use `form()` from `@angular/forms/signals` — model signal + `form()` → `FieldTree` with `[formField]` directive, validation via schema (`required`, `pattern`, `email`, `minLength`, etc.), state via `.touched()`, `.invalid()`, `.errors()`. Never use `[(ngModel)]` or `ReactiveFormsModule` + `FormControl`.
 - **Async state** (Resources API): `resource()` / `rxResource()` from `@angular/core` for HTTP requests instead of manual `subscribe()` + `signal()`
 - **Validation**: Zod on both frontend and backend. Schemas are the single source of truth for shared types
 - **i18n**: all strings via `| translate`, keys in `en.json` / `ru.json`
@@ -58,10 +58,10 @@ client/public/assets/
 - `public/browser/` is in `.gitignore` — build output
 - i18n and Material themes live in `client/public/assets/` (copied to build output)
 - New components must use: `@if`/`@for`, `model()` / signals, `rxResource()`
-- Never use: `*ngIf` / `*ngFor`, `[(ngModel)]`, manual `subscribe()` + `signal()` for HTTP
+- Never use: `*ngIf` / `*ngFor`, `[(ngModel)]`, `ReactiveFormsModule` + `FormControl`, manual `subscribe()` + `signal()` for HTTP
 
 ## Common Tasks
-- **Add a page**: `pages/xxx/xxx.component.ts` (standalone), route in `app.routes.ts`, form via `model()`, HTTP via `rxResource()`, Zod validation
+- **Add a page**: `pages/xxx/xxx.component.ts` (standalone), route in `app.routes.ts`, form via `form()` + `[formField]`, HTTP via `rxResource()`, Zod validation
 - **Add an API endpoint**: `src/routes/xxx.ts` connected in `routes/index.ts`, Zod validation schema
 - **Add a translation**: key in `en.json` / `ru.json`, template usage `{{ 'section.key' | translate }}`
 - **Testing**: all changes must maintain >90% test coverage. New code → tests in `src/__tests__/`. Run `npm run test:coverage` before committing

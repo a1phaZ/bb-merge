@@ -1,6 +1,6 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl, ValidationErrors, AbstractControl } from '@angular/forms';
+import { form, required, pattern, FormField } from '@angular/forms/signals';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,17 +16,11 @@ import { ProvidersService } from '../../core/services/providers.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
 
-function urlValidator(control: AbstractControl): ValidationErrors | null {
-  if (!control.value) return null;
-  try { new URL(control.value); return null; }
-  catch { return { url: true }; }
-}
-
 @Component({
   selector: 'app-providers',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule, FormField,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
     MatSnackBarModule, MatTooltipModule,
@@ -49,11 +43,16 @@ function urlValidator(control: AbstractControl): ValidationErrors | null {
           <div class="form-grid">
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.name' | translate }}</mat-label>
-              <input matInput [value]="form().name" (input)="updateForm('name', $any($event).target.value)" placeholder="My Bitbucket">
+              <input matInput [formField]="providerForm.name" placeholder="My Bitbucket">
+              @if (providerForm.name().touched() && providerForm.name().invalid()) {
+                @for (err of providerForm.name().errors(); track err.kind) {
+                  <mat-error>{{ err.message }}</mat-error>
+                }
+              }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.type' | translate }}</mat-label>
-              <mat-select [value]="form().type" (selectionChange)="updateForm('type', $event.value)">
+              <mat-select [formField]="providerForm.type">
                 <mat-option value="bitbucket">Bitbucket</mat-option>
                 <mat-option value="gitlab">GitLab</mat-option>
                 <mat-option value="github">GitHub</mat-option>
@@ -61,22 +60,29 @@ function urlValidator(control: AbstractControl): ValidationErrors | null {
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
-              <input matInput [formControl]="urlControl" placeholder="https://bitbucket.example.com">
-              @if (urlControl.invalid && urlControl.touched) {
-                <mat-error>{{ 'providers.invalidUrl' | translate }}</mat-error>
+              <input matInput [formField]="providerForm.apiUrl" placeholder="https://bitbucket.example.com">
+              @if (providerForm.apiUrl().touched() && providerForm.apiUrl().invalid()) {
+                @for (err of providerForm.apiUrl().errors(); track err.kind) {
+                  <mat-error>{{ err.message }}</mat-error>
+                }
               }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.token' | translate }}</mat-label>
-              <input matInput type="password" [value]="form().token" (input)="updateForm('token', $any($event).target.value)">
+              <input matInput type="password" [formField]="providerForm.token">
+              @if (providerForm.token().touched() && providerForm.token().invalid()) {
+                @for (err of providerForm.token().errors(); track err.kind) {
+                  <mat-error>{{ err.message }}</mat-error>
+                }
+              }
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.defaultTarget' | translate }}</mat-label>
-              <input matInput [value]="form().defaultTarget" (input)="updateForm('defaultTarget', $any($event).target.value)" placeholder="main">
+              <input matInput [formField]="providerForm.defaultTarget" placeholder="main">
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.defaultPrefix' | translate }}</mat-label>
-              <input matInput [value]="form().defaultTitlePrefix" (input)="updateForm('defaultTitlePrefix', $any($event).target.value)" placeholder="Merge">
+              <input matInput [formField]="providerForm.defaultTitlePrefix" placeholder="Merge">
             </mat-form-field>
           </div>
 
@@ -84,7 +90,7 @@ function urlValidator(control: AbstractControl): ValidationErrors | null {
             <h4>{{ 'providers.repository' | translate }}</h4>
             <div class="repo-row">
               <button mat-stroked-button (click)="loadRepos()"
-                [disabled]="!form().apiUrl || !form().token || loadingRepos()">
+                [disabled]="!providerModel().apiUrl || !providerModel().token || loadingRepos()">
                 <mat-icon>cloud_download</mat-icon>
                 {{ loadingRepos() ? ('providers.loading' | translate) : ('providers.loadRepos' | translate) }}
               </button>
@@ -108,10 +114,10 @@ function urlValidator(control: AbstractControl): ValidationErrors | null {
                 </mat-autocomplete>
               </mat-form-field>
             }
-            @if (form().defaultProject && form().defaultRepo) {
+            @if (providerModel().defaultProject && providerModel().defaultRepo) {
               <div class="selected-repo">
                 <mat-icon>check_circle</mat-icon>
-                {{ form().defaultProject }}/{{ form().defaultRepo }}
+                {{ providerModel().defaultProject }}/{{ providerModel().defaultRepo }}
               </div>
             }
           </div>
@@ -224,37 +230,24 @@ export class ProvidersComponent {
   repoFilter = signal('');
 
   selectedRepoLabel = computed(() => {
-    const f = this.form();
+    const f = this.providerModel();
     if (f.defaultProject && f.defaultRepo) return `${f.defaultProject}/${f.defaultRepo}`;
     return '';
   });
 
   columns = ['name', 'type', 'apiUrl', 'defaultTarget', 'actions'];
 
-  form = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
-  urlControl = new FormControl('', { validators: [urlValidator], updateOn: 'blur' });
-  private syncingUrl = false;
+  providerModel = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
 
-  protected updateForm(key: string, value: string) {
-    if (key === 'apiUrl' && !this.syncingUrl) {
-      this.syncingUrl = true;
-      this.urlControl.setValue(value as string, { emitEvent: false });
-      this.syncingUrl = false;
-    }
-    this.form.update(f => ({ ...f, [key]: value }));
-  }
-
-  constructor() {
-    this.urlControl.valueChanges.subscribe(v => {
-      if (this.syncingUrl) return;
-      this.syncingUrl = true;
-      this.form.update(f => ({ ...f, apiUrl: v ?? '' }));
-      this.syncingUrl = false;
-    });
-  }
+  providerForm = form(this.providerModel, (s) => {
+    required(s.name, { message: 'Name is required' });
+    required(s.apiUrl, { message: 'API URL is required' });
+    pattern(s.apiUrl, /^https?:\/\/.+/, { message: 'Enter a valid URL' });
+    required(s.token, { message: 'Token is required' });
+  });
 
   loadRepos() {
-    const f = this.form();
+    const f = this.providerModel();
     if (!f.apiUrl || !f.token) return;
 
     this.loadingRepos.set(true);
@@ -283,7 +276,7 @@ export class ProvidersComponent {
   }
 
   onRepoSelected(repo: RepoInfo) {
-    this.form.update(f => ({ ...f, defaultProject: repo.project, defaultRepo: repo.name }));
+    this.providerModel.update(f => ({ ...f, defaultProject: repo.project, defaultRepo: repo.name }));
   }
 
   cancelForm() {
@@ -293,17 +286,14 @@ export class ProvidersComponent {
   }
 
   private resetForm() {
-    this.form.set({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
-    this.syncingUrl = true;
-    this.urlControl.reset('', { emitEvent: false });
-    this.syncingUrl = false;
+    this.providerModel.set({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
     this.repos.set([]);
     this.filteredRepos.set([]);
     this.reposError.set(null);
   }
 
   save() {
-    const f = this.form();
+    const f = this.providerModel();
     if (!f.name || !f.apiUrl || !f.token) {
       this.snackBar.open('Name, API URL, and Token are required', 'Close', { duration: 3000 });
       return;
@@ -326,11 +316,7 @@ export class ProvidersComponent {
 
   edit(p: any) {
     this.editingId.set(p.id);
-    this.form.set({ ...p, token: '' });
-    this.syncingUrl = true;
-    this.urlControl.setValue(p.apiUrl || '', { emitEvent: false });
-    this.urlControl.markAsTouched();
-    this.syncingUrl = false;
+    this.providerModel.set({ ...p, token: '' });
     if (p.defaultProject && p.defaultRepo) {
       const repo: RepoInfo = { project: p.defaultProject, name: p.defaultRepo, fullName: `${p.defaultProject}/${p.defaultRepo}` };
       this.repos.set([repo]);
