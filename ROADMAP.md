@@ -22,7 +22,7 @@
 | Версия | Этапы | Описание |
 |--------|-------|----------|
 | **v1.0** | 0–14 | Core MVP: вся основная функциональность без auth, уведомлений, scheduler'а |
-| **v2.0** | 15–21 | Enterprise: auth, уведомления, scheduler, dry-run, i18n, мониторинг, security |
+| **v2.0** | 15–21 | SaaS: auth + регистрация, тарифы (Free/Pro/Business/Self-Hosted), квоты, уведомления, scheduler, dry-run, i18n, мониторинг, security |
 | **v3.0** | 22–25 | Operations: Docker, CI/CD, backup, API docs |
 | **v4.0** | 26–28 | Scale: job queue, event-driven, multi-tenant |
 | **v5.0** | 29–30 | UX: onboarding, themes, responsive, PWA |
@@ -471,35 +471,72 @@ data/
 
 ---
 
-## Этап 15 — Аутентификация и RBAC
+## Этап 15 — SaaS: Аутентификация + Регистрация + Тарифы
 
 | Задача | Статус |
 |--------|--------|
-| Local auth: логин/пароль, bcrypt/argon2 | 🟡 План |
+| Local auth: логин/пароль, bcrypt | 🟠 В работе |
+| Auth middleware (`authenticate` + `authorize`) | 🟠 В работе |
+| Login/Register/Me API endpoints | 🟠 В работе |
+| Users storage (SQLite + File) с полем `plan` | 🟠 В работе |
+| Quota middleware (лимит провайдеров + MR в месяц) | 🟠 В работе |
+| Login page (Angular, replace stub) | 🟠 В работе |
+| Register page (Angular) | 🟠 В работе |
+| Auth interceptor (JWT → headers) | 🟠 В работе |
+| Auth guard (canActivate) | 🟠 В работе |
+| Free plan: 1 провайдер, 3 MR/мес, история 7 дней | 🟠 В работе |
+| Pro plan ($9/мес): 5 провайдеров, 100 MR/мес, история 90 дней | 🟡 План |
+| Business plan ($29/мес): без лимитов, до 10 участников | 🟡 План |
+| Self-Hosted ($299): Docker-образ, всё без лимитов | 🟡 План |
+| Stripe интеграция + billing webhooks | 🟡 План |
 | Инвайт-код при первом запуске для регистрации admin | 🟡 План |
 | OAuth2 / OIDC провайдеры (Keycloak, Google, GitHub) | 🟡 План |
-| Роли: admin / operator / viewer | 🟡 План |
-| Auth middleware на `/api/*` | 🟡 План |
-| Login page (+ OAuth2 redirect) | 🟡 План |
-| Protected routes в Angular (canActivate guard) | 🟡 План |
 | User management: `/admin/users` (только admin) | 🟡 План |
 | Session management: активные сессии, принудительный logout | 🟡 План |
+| Usage dashboard: остаток MR, провайдеров за месяц | 🟡 План |
 
-**Таблица users (SQLite):**
+### Таблица users (SQLite)
+
 ```sql
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT,
+  password_hash TEXT NOT NULL,
   display_name TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin','operator','viewer')),
+  plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free','pro','business','self-hosted')),
+  stripe_customer_id TEXT,
   auth_provider TEXT DEFAULT 'local' CHECK(auth_provider IN ('local','oauth2','oidc')),
   auth_provider_id TEXT,
   avatar_url TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   last_login_at TEXT
 );
+
+CREATE TABLE usage_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  provider_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
 ```
+
+### Тарифная сетка
+
+| Фича | Free | Pro ($9/мес) | Business ($29/мес) | Self-Hosted ($299) |
+|------|------|---------------|---------------------|---------------------|
+| Провайдеры | 1 | 5 | ∞ | ∞ |
+| MR в месяц | 3 | 100 | 1000 | ∞ |
+| История | 7 дней | 90 дней | ∞ | ∞ |
+| Шаблоны | ❌ | ✅ | ✅ | ✅ |
+| Webhook-регистрация | ❌ | ✅ | ✅ | ✅ |
+| Команда | ❌ | ❌ | до 10 | ∞ |
+| SSO / OIDC | ❌ | ❌ | ✅ | ✅ |
+| Поддержка | GitHub Issues | Email | Priority + SLA | Email |
+| Хостинг | Облако | Облако | Облако | Их сервер |
+| Цена | Бесплатно | $9/мес | $29/мес | $299 (lifetime) |
 
 ---
 

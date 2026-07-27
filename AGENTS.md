@@ -9,6 +9,9 @@ Multi-provider merge request manager (Bitbucket/GitLab/GitHub). Angular 22 front
 | Frontend | Angular 22, Material UI, `@ngx-translate/core` (i18n, standalone API), Zod |
 | Backend | Node.js, Express, TypeScript |
 | Validation | Zod (new code), Joi (legacy code) |
+| Auth | bcryptjs + jsonwebtoken (JWT access/refresh) |
+| Auth roles | admin / operator / viewer |
+| Plans | free / pro / business / self-hosted |
 | Storage | JSON file (default) / SQLite, AES-256-GCM encrypted tokens |
 | Testing | Vitest (frontend, via `@analogjs/vite-plugin-angular`), Vitest + Supertest (backend, coverage >90%) |
 
@@ -73,3 +76,25 @@ client/public/assets/
 - **Add an API endpoint**: `src/routes/xxx.ts` connected in `routes/index.ts`, Zod validation schema
 - **Add a translation**: key in `en.json` / `ru.json`, template usage `{{ 'section.key' | translate }}`
 - **Testing**: all changes must maintain >90% test coverage. New code → tests in `src/__tests__/` (backend) or alongside component (frontend). Run `npm run test:coverage` (backend) or `cd client && npx vitest run` (frontend) before committing
+
+## Work State (Session 2026-07-24)
+
+### Completed
+- **Backend auth**: `src/middleware/auth.ts` (authenticate, authorize, signToken), `src/routes/auth.ts` (register/login/me/usage), bcryptjs + jsonwebtoken
+- **Quota middleware**: `src/middleware/quota.ts` (quotaProviders, quotaMR with PLAN_LIMITS), wired to POST /providers and POST /merge-requests-v2
+- **Storage**: User interface in `src/storage/interfaces.ts`, user/usage methods in FileStorage + SQLiteStorage (tables: `users`, `usage_log`)
+- **Frontend auth**: `AuthService`, `AuthInterceptor`, `AuthGuard`, `LoginComponent`, `RegisterComponent`
+- **app.config.ts**: authInterceptor registered
+- **app.routes.ts**: authGuard on protected routes, /register route, fallback → /login, authGuard on scheduler
+- **app.component.ts**: login/logout toolbar buttons, user email display
+- **.env.example**: JWT_SECRET + DOMAIN added
+- **Tests**: 170 frontend tests pass (26 files, 0 failures)
+- **Docker**: multi-stage build (`app` + `caddy` targets)
+- **Caddyfile**: `{$DOMAIN}`, TLS, static SPA from `/srv/public`, health_uri, security headers
+- **docker-compose.yml**: Caddy (80/443) + app (expose 3000), shared named volumes, `condition: service_healthy`
+- **app.ts**: SPA fallback fixed → `public/browser`
+- **DEPLOY.md**: полная инструкция VPS (Docker, .env, запуск, обслуживание)
+
+### Blocked / Not Started
+- `gh-pages` landing page not pushed (no credentials)
+- Backend tests for auth/quota not yet created

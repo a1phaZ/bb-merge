@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { ProviderConfig } from '../providers/interfaces';
-import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
+import { User, StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
 import { cryptoService } from './crypto';
 import { config } from '../config';
 
@@ -99,6 +99,27 @@ export class SQLiteStorageProvider implements StorageProvider {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin','operator','viewer')),
+        plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free','pro','business','self-hosted')),
+        auth_provider TEXT DEFAULT 'local' CHECK(auth_provider IN ('local','oauth2','oidc')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        last_login_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS usage_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        provider_id TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `);
   }
@@ -396,5 +417,67 @@ export class SQLiteStorageProvider implements StorageProvider {
     for (const [key, value] of Object.entries(settings)) {
       await this.saveSetting(key, value);
     }
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const row = this.db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    if (!row) return null;
+    return {
+      id: row.id,
+      email: row.email,
+      passwordHash: row.password_hash,
+      displayName: row.display_name,
+      role: row.role,
+      plan: row.plan,
+      authProvider: row.auth_provider,
+      createdAt: row.created_at,
+      lastLoginAt: row.last_login_at,
+    };
+  }
+
+  async getUser(id: string): Promise<User | null> {
+    const row = this.db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    if (!row) return null;
+    return {
+      id: row.id,
+      email: row.email,
+      passwordHash: row.password_hash,
+      displayName: row.display_name,
+      role: row.role,
+      plan: row.plan,
+      authProvider: row.auth_provider,
+      createdAt: row.created_at,
+      lastLoginAt: row.last_login_at,
+    };
+  }
+
+  async saveUser(user: User): Promise<void> {
+    const now = new Date().toISOString();
+    const existing = this.db.prepare('SELECT id FROM users WHERE id = ?').get(user.id);
+    if (existing) {
+      this.db.prepare(`
+        UPDATE users SET email=?, password_hash=?, display_name=?, role=?, plan=?, last_login_at=?
+        WHERE id=?
+      `).run(user.email, user.passwordHash, user.displayName, user.role, user.plan, user.lastLoginAt || null, user.id);
+    } else {
+      this.db.prepare(`
+        INSERT INTO users (id, email, password_hash, display_name, role, plan, auth_provider, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(user.id, user.email, user.passwordHash, user.displayName, user.role, user.plan, user.authProvider, now);
+    }
+  }
+
+  async getUsageCount(userId: string, action: string, since: string): Promise<number> {
+    const row = this.db.prepare(`
+      SELECT COUNT(*) as count FROM usage_log WHERE user_id = ? AND action = ? AND created_at >= ?
+    `).get(userId, action, since) as any;
+    return row.count;
+  }
+
+  async logUsage(userId: string, action: string, providerId?: string): Promise<void> {
+    this.db.prepare(`
+      INSERT INTO usage_log (user_id, action, provider_id, created_at)
+      VALUES (?, ?, ?, ?)
+    `).run(userId, action, providerId || null, new Date().toISOString());
   }
 }

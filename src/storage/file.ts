@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ProviderConfig } from '../providers/interfaces';
-import { StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
+import { User, StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
 import { cryptoService } from './crypto';
 import { config } from '../config';
 
@@ -219,5 +219,37 @@ export class FileStorageProvider implements StorageProvider {
     const all = readJSONObject('settings');
     Object.assign(all, settings);
     writeJSONObject('settings', all);
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const users = readJSON<User>('users');
+    return users.find(u => u.email === email) || null;
+  }
+
+  async getUser(id: string): Promise<User | null> {
+    const users = readJSON<User>('users');
+    return users.find(u => u.id === id) || null;
+  }
+
+  async saveUser(user: User): Promise<void> {
+    const users = readJSON<User>('users');
+    const existingIndex = users.findIndex(u => u.id === user.id);
+    if (existingIndex >= 0) {
+      users[existingIndex] = user;
+    } else {
+      users.push(user);
+    }
+    writeJSON('users', users);
+  }
+
+  async getUsageCount(userId: string, action: string, since: string): Promise<number> {
+    const all = readJSON<{ userId: string; action: string; createdAt: string }>('usage-log');
+    return all.filter(u => u.userId === userId && u.action === action && u.createdAt >= since).length;
+  }
+
+  async logUsage(userId: string, action: string, providerId?: string): Promise<void> {
+    const all = readJSON<any>('usage-log');
+    all.push({ userId, action, providerId, createdAt: new Date().toISOString() });
+    writeJSON('usage-log', all);
   }
 }

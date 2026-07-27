@@ -1261,11 +1261,116 @@ ng add @angular/material
 
 ---
 
+## 14. SaaS / Pricing Model
+
+### Тарифы
+
+| Фича | Free | Pro ($9/мес) | Business ($29/мес) | Self-Hosted ($299 единоразово) |
+|------|------|---------------|---------------------|------------------------------|
+| Провайдеры | 1 | 5 | ∞ | ∞ |
+| MR в месяц | 3 | 100 | 1000 | ∞ |
+| История | 7 дней | 90 дней | ∞ | ∞ |
+| Шаблоны | ❌ | ✅ | ✅ | ✅ |
+| Webhook-регистрация | ❌ | ✅ | ✅ | ✅ |
+| Команда | ❌ | ❌ | до 10 | ∞ |
+| SSO / OIDC | ❌ | ❌ | ✅ | ✅ |
+| Поддержка | GitHub Issues | Email | Priority + SLA | Email |
+| Хостинг | Наше облако | Наше облако | Наше облако | Их сервер |
+| Лицензия | SaaS | SaaS | SaaS | MIT + Docker-образ |
+| Обновления | Авто | Авто | Авто | LTS-релизы |
+
+### Модель User (расширенная)
+
+```typescript
+interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  displayName: string;
+  role: 'admin' | 'operator' | 'viewer';
+  plan: 'free' | 'pro' | 'business' | 'self-hosted';
+  stripeCustomerId?: string;
+  authProvider: 'local' | 'oauth2' | 'oidc';
+  avatarUrl?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+```
+
+### Таблица `users` (SQLite)
+
+```sql
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin','operator','viewer')),
+  plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free','pro','business','self-hosted')),
+  auth_provider TEXT DEFAULT 'local' CHECK(auth_provider IN ('local','oauth2','oidc')),
+  auth_provider_id TEXT,
+  avatar_url TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  last_login_at TEXT
+);
+```
+
+### Таблица `usage_log` (SQLite)
+
+```sql
+CREATE TABLE usage_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  provider_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (provider_id) REFERENCES providers(id)
+);
+```
+
+### API endpoints (Auth + Billing)
+
+| Метод | Path | Описание |
+|-------|------|---------|
+| `POST` | `/api/v1/auth/register` | `{ email, password, displayName }` → `{ token, user }` |
+| `POST` | `/api/v1/auth/login` | `{ email, password }` → `{ token, user }` |
+| `POST` | `/api/v1/auth/refresh` | `{ refreshToken }` → `{ token }` |
+| `GET` | `/api/v1/auth/me` | current user info |
+| `GET` | `/api/v1/user/usage` | остаток MR, провайдеров за месяц |
+| `POST` | `/api/v1/billing/checkout` | `{ plan }` → Stripe session URL |
+| `POST` | `/api/v1/billing/webhook` | Stripe webhook |
+
+### Middleware
+
+```typescript
+// src/middleware/auth.ts
+function authenticate(req, res, next) { /* JWT verify → req.user */ }
+function authorize(...roles) { /* role check */ }
+
+// src/middleware/quota.ts
+function quotaProviders(req, res, next) { /* count providers → < plan limit */ }
+function quotaMR(req, res, next) { /* count MR this month → < plan limit */ }
+```
+
+### Этапы реализации
+
+| Этап | Описание | Дней |
+|------|----------|------|
+| 15.0 | Auth middleware + routes (login/register/me) | 2 |
+| 15.1 | Users storage (SQLite + File) + migration | 1 |
+| 15.2 | Quota middleware (providers + MR limits) | 1 |
+| 15.3 | Frontend: login, register, auth interceptor, guard | 2 |
+| 15.4 | Stripe integration + billing webhooks | 3 |
+| 15.5 | Pro/Business/Self-Hosted plans activation | 2 |
+
+---
+
 ## После v1.0
 
 | Версия | Этапы | Примерный объём |
 |--------|-------|----------------|
-| v2.0 | 15-21 (Auth, Notifications, Scheduler, Dry-Run, i18n, Monitoring, Security) | 20-30 дней |
+| v2.0 | 15-21 (Auth, SaaS, Notifications, Scheduler, Dry-Run, i18n, Monitoring, Security) | 25-35 дней |
 | v3.0 | 22-25 (Docker, CI/CD, Backup, API Docs) | 5-7 дней |
 | v4.0 | 26-28 (Job Queue, Event-Driven, Multi-tenant) | 10-15 дней |
 | v5.0 | 29-30 (Onboarding, Theme, Responsive, PWA) | 5-7 дней |

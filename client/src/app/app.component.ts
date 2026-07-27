@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslatePipe } from '@ngx-translate/core';
 import { UiSettingsService } from './core/services/ui-settings.service';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +28,18 @@ import { UiSettingsService } from './core/services/ui-settings.service';
       </button>
       <span>Merge Request Creator</span>
       <span class="spacer"></span>
+
+      @if (auth.isAuthenticated()) {
+        <span class="user-email">{{ auth.user()?.email }}</span>
+        <button mat-icon-button (click)="logout()" matTooltip="Sign Out">
+          <mat-icon>logout</mat-icon>
+        </button>
+      } @else {
+        <button mat-icon-button routerLink="/login" matTooltip="Sign In">
+          <mat-icon>login</mat-icon>
+        </button>
+      }
+
       <button mat-icon-button routerLink="/settings" matTooltip="{{ 'nav.settings' | translate }}">
         <mat-icon>settings</mat-icon>
       </button>
@@ -141,8 +154,15 @@ import { UiSettingsService } from './core/services/ui-settings.service';
 export class AppComponent {
   drawerExpanded = signal(true);
   private uiSettings = inject(UiSettingsService);
+  auth = inject(AuthService);
+  private router = inject(Router);
 
   constructor() {
     inject(MatIconRegistry).setDefaultFontSetClass('material-icons-outlined');
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigateByUrl('/login');
   }
 }

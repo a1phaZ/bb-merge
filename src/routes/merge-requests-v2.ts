@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { ProviderFactory } from '../providers/factory';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
+import { quotaMR } from '../middleware/quota';
 import { addProgressEvent, finishProgress, getOrCreateSession } from './progress';
 import { logger } from '../logger';
 import { validate, mergeRequestCreateSchema } from '../validation';
@@ -29,7 +30,7 @@ interface MergeRequestBody {
 
 const router = Router();
 
-router.post('/', validate(mergeRequestCreateSchema), asyncHandler(async (req: Request, res: Response) => {
+router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async (req: Request, res: Response) => {
   const body = req.body as MergeRequestBody;
 
   const storage = await getStorageProvider();

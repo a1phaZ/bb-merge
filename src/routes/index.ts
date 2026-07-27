@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
 import healthRouter from './health';
 import mergeRequestsRouter from './merge-requests';
 import mergeRequestsV2Router from './merge-requests-v2';
@@ -9,9 +10,12 @@ import templatesRouter from './templates';
 import logsRouter from './logs';
 import settingsRouter from './settings';
 import progressRouter from './progress';
+import authRouter from './auth';
 
 const v1Router = Router();
 
+v1Router.use('/auth', authRouter);
+v1Router.use(authenticate);
 v1Router.use('/merge-requests', mergeRequestsV2Router);
 v1Router.use('/providers', providersRouter);
 v1Router.use('/history', historyRouter);

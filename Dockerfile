@@ -13,10 +13,9 @@ COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npx tsc
 
-FROM node:20-alpine
+FROM node:20-alpine AS app
 RUN apk add --no-cache tzdata
 WORKDIR /app
-
 COPY --from=api-build /app/dist ./dist
 COPY --from=api-build /app/node_modules ./node_modules
 COPY --from=ng-build /app/public ./public
@@ -34,3 +33,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
 CMD ["node", "dist/server.js"]
+
+FROM caddy:alpine AS caddy
+COPY --from=ng-build /app/public/browser /srv/public
+COPY Caddyfile /etc/caddy/Caddyfile
+EXPOSE 80 443

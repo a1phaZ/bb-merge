@@ -15,7 +15,7 @@ app.use('/api', apiLimiter);
 
 app.use(routes);
 
-const publicPath = path.resolve('public');
+const publicPath = path.resolve('public', 'browser');
 app.use(express.static(publicPath));
 
 app.get('*', (_req, res) => {

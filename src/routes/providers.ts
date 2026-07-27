@@ -7,6 +7,7 @@ import { GitHubProvider } from '../providers/github';
 import { GitProvider, ProviderConfig } from '../providers/interfaces';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
+import { quotaProviders } from '../middleware/quota';
 import { logger } from '../logger';
 import { validate, providerCreateSchema, providerUpdateSchema, providerExploreReposSchema } from '../validation';
 import { RepoInfo } from '../providers/interfaces';
@@ -34,7 +35,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json(provider);
 }));
 
-router.post('/', validate(providerCreateSchema), asyncHandler(async (req: Request, res: Response) => {
+router.post('/', validate(providerCreateSchema), quotaProviders, asyncHandler(async (req: Request, res: Response) => {
   const { name, type, apiUrl, token, defaultTarget, defaultTitlePrefix, defaultProject, defaultRepo } = req.body;
 
   const provider: ProviderConfig = {

@@ -1,18 +1,35 @@
-version: '3.8'
-
 services:
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "${PORT:-3000}:3000"
+      target: app
+    expose:
+      - "3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - STORAGE_TYPE=${STORAGE_TYPE:-file}
+      - STORAGE_TYPE=${STORAGE_TYPE:-sqlite}
       - DATA_DIR=/app/data
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
       - TZ=${TZ:-UTC}
     volumes:
       - app-data:/app/data
@@ -28,3 +45,4 @@ services:
 volumes:
   app-data:
   app-logs:
+  caddy-data:

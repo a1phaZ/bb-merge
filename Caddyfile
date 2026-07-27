@@ -1,0 +1,27 @@
+{$DOMAIN:localhost} {
+    handle_path /api/* {
+        reverse_proxy app:3000 {
+            health_uri /health
+            health_interval 30s
+            health_timeout 5s
+        }
+    }
+
+    handle {
+        root * /srv/public
+        try_files {path} /index.html
+        file_server
+        header Cache-Control "public, max-age=3600"
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    log {
+        output file /data/caddy/access.log
+    }
+}

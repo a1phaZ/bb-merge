@@ -64,7 +64,25 @@ export interface StatsEntry {
   errors: number;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  displayName: string;
+  role: 'admin' | 'operator' | 'viewer';
+  plan: 'free' | 'pro' | 'business' | 'self-hosted';
+  authProvider: 'local' | 'oauth2' | 'oidc';
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
 export interface StorageProvider {
+  // Users
+  getUserByEmail(email: string): Promise<User | null>;
+  getUser(id: string): Promise<User | null>;
+  saveUser(user: User): Promise<void>;
+  getUsageCount(userId: string, action: string, since: string): Promise<number>;
+  logUsage(userId: string, action: string, providerId?: string): Promise<void>;
   getProviders(): Promise<ProviderConfig[]>;
   getProvider(id: string): Promise<ProviderConfig | null>;
   saveProvider(config: ProviderConfig): Promise<void>;

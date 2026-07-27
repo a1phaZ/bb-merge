@@ -9,6 +9,7 @@ const envSchema = z.object({
   STORAGE_TYPE: z.enum(['file', 'sqlite']).default('file'),
   DATA_DIR: z.string().default('./data'),
   ENCRYPTION_KEY: z.string().optional(),
+  JWT_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
 });
 
