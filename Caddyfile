@@ -1,5 +1,5 @@
 {$DOMAIN:localhost} {
-    handle_path /api/* {
+    handle /api/* {
         reverse_proxy app:3000 {
             health_uri /health
             health_interval 30s
@@ -7,18 +7,22 @@
         }
     }
 
+    handle /health {
+        reverse_proxy app:3000
+    }
+
     handle {
         root * /srv/public
         try_files {path} /index.html
         file_server
-        header Cache-Control "public, max-age=3600"
-    }
 
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        Referrer-Policy "strict-origin-when-cross-origin"
+        header {
+            Cache-Control "public, max-age=3600"
+            Strict-Transport-Security "max-age=31536000; includeSubDomains"
+            X-Content-Type-Options "nosniff"
+            X-Frame-Options "DENY"
+            Referrer-Policy "strict-origin-when-cross-origin"
+        }
     }
 
     log {
