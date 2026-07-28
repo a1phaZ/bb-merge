@@ -9,4 +9,5 @@ logs/
 dist/
 client/node_modules/
 client/.git/
-client/src/
+client/.angular/
+client/coverage/
