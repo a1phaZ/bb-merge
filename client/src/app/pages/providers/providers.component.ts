@@ -278,11 +278,12 @@ export class ProvidersComponent {
 
   providerModel = signal<ProviderCreate>({ name: '', type: 'bitbucket', apiUrl: '', token: '', defaultTarget: 'main', defaultTitlePrefix: 'Merge' });
 
+  private readonly TOKEN_SENTINEL = '••••••••';
+
   providerForm = form(this.providerModel, (s) => {
     required(s.name, { message: 'Name is required' });
     required(s.apiUrl, { message: 'API URL is required' });
     pattern(s.apiUrl, /^https?:\/\/.+/, { message: 'Enter a valid URL' });
-    required(s.token, { message: 'Token is required' });
   });
 
   loadRepos() {
@@ -333,14 +334,22 @@ export class ProvidersComponent {
 
   save() {
     const f = this.providerModel();
-    if (!f.name || !f.apiUrl || !f.token) {
-      this.snackBar.open('Name, API URL, and Token are required', 'Close', { duration: 3000 });
+    if (!f.name || !f.apiUrl) {
+      this.snackBar.open('Name and API URL are required', 'Close', { duration: 3000 });
       return;
     }
+    if (!this.editingId() && !f.token) {
+      this.snackBar.open('Token is required for new providers', 'Close', { duration: 3000 });
+      return;
+    }
+
     this.saving.set(true);
+    const payload = this.editingId() && f.token === this.TOKEN_SENTINEL
+      ? { ...f, token: '' }
+      : f;
     const op = this.editingId()
-      ? this.service.update(this.editingId()!, f)
-      : this.service.create(f);
+      ? this.service.update(this.editingId()!, payload)
+      : this.service.create(payload);
 
     op.subscribe({
       next: () => {
@@ -355,7 +364,7 @@ export class ProvidersComponent {
 
   edit(p: any) {
     this.editingId.set(p.id);
-    this.providerModel.set({ ...p, token: '', defaultTarget: p.defaultTarget || 'main', defaultTitlePrefix: p.defaultTitlePrefix || 'Merge' });
+    this.providerModel.set({ ...p, token: this.TOKEN_SENTINEL, defaultTarget: p.defaultTarget || 'main', defaultTitlePrefix: p.defaultTitlePrefix || 'Merge' });
     if (p.defaultProject && p.defaultRepo) {
       const repo: RepoInfo = { project: p.defaultProject, name: p.defaultRepo, fullName: `${p.defaultProject}/${p.defaultRepo}` };
       this.repos.set([repo]);
