@@ -1,4 +1,4 @@
-FROM node:20-alpine AS ng-build
+FROM node:22-alpine AS ng-build
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install --legacy-peer-deps --no-audit --no-fund
