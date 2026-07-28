@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -16,31 +17,32 @@ import { AuthService } from '../../core/services/auth.service';
     CommonModule, FormsModule, RouterLink,
     MatCardModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatProgressBarModule,
+    TranslatePipe,
   ],
   template: `
     <div class="register-container">
       <mat-card class="register-card">
         <mat-card-content>
-          <h2>Create Account</h2>
-          <p class="subtitle">Start with a free plan — 3 MRs per month</p>
+          <h2>{{ 'auth.register.title' | translate }}</h2>
+          <p class="subtitle">{{ 'auth.register.subtitle' | translate }}</p>
 
           @if (error()) {
             <div class="error-banner">{{ error() }}</div>
           }
 
           <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Display Name</mat-label>
+            <mat-label>{{ 'auth.register.displayName' | translate }}</mat-label>
             <input matInput [(ngModel)]="displayName" placeholder="John Doe" (keydown.enter)="register()">
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Email</mat-label>
+            <mat-label>{{ 'auth.register.email' | translate }}</mat-label>
             <input matInput type="email" [(ngModel)]="email" placeholder="user@example.com" (keydown.enter)="register()">
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Password</mat-label>
-            <input matInput type="password" [(ngModel)]="password" placeholder="At least 6 characters" (keydown.enter)="register()">
+            <mat-label>{{ 'auth.register.password' | translate }}</mat-label>
+            <input matInput type="password" [(ngModel)]="password" placeholder="{{ 'auth.register.passwordHint' | translate }}" (keydown.enter)="register()">
           </mat-form-field>
 
           @if (loading()) {
@@ -48,12 +50,12 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           <button mat-raised-button color="primary" class="full-width mt-16" (click)="register()" [disabled]="loading()">
-            Create Free Account
+            {{ 'auth.register.createAccount' | translate }}
           </button>
 
           <p class="mt-16 login-link">
-            Already have an account?
-            <a routerLink="/login" class="link">Sign in</a>
+            {{ 'auth.register.hasAccount' | translate }}
+            <a routerLink="/login" class="link">{{ 'auth.register.signIn' | translate }}</a>
           </p>
         </mat-card-content>
       </mat-card>

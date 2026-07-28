@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -17,25 +18,26 @@ import { AuthService } from '../../core/services/auth.service';
     CommonModule, FormsModule, RouterLink,
     MatCardModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatProgressBarModule,
+    TranslatePipe,
   ],
   template: `
     <div class="login-container">
       <mat-card class="login-card">
         <mat-card-content>
-          <h2>Merge Request Manager</h2>
-          <p class="subtitle">Sign in to your account</p>
+          <h2>{{ 'auth.login.title' | translate }}</h2>
+          <p class="subtitle">{{ 'auth.login.subtitle' | translate }}</p>
 
           @if (error()) {
             <div class="error-banner">{{ error() }}</div>
           }
 
           <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Email</mat-label>
+            <mat-label>{{ 'auth.login.email' | translate }}</mat-label>
             <input matInput type="email" [(ngModel)]="email" placeholder="user@example.com" (keydown.enter)="login()">
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Password</mat-label>
+            <mat-label>{{ 'auth.login.password' | translate }}</mat-label>
             <input matInput type="password" [(ngModel)]="password" placeholder="••••••••" (keydown.enter)="login()">
           </mat-form-field>
 
@@ -44,12 +46,12 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           <button mat-raised-button color="primary" class="full-width mt-16" (click)="login()" [disabled]="loading()">
-            Sign In
+            {{ 'auth.login.signIn' | translate }}
           </button>
 
           <p class="mt-16 register-link">
-            Don't have an account?
-            <a routerLink="/register" class="link">Create one</a>
+            {{ 'auth.login.noAccount' | translate }}
+            <a routerLink="/register" class="link">{{ 'auth.login.createOne' | translate }}</a>
           </p>
         </mat-card-content>
       </mat-card>
