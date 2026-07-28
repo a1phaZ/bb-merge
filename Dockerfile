@@ -8,18 +8,18 @@ RUN npm run build
 FROM node:20-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-RUN npx -p typescript tsc --project tsconfig.build.json
+RUN npx tsc --project tsconfig.build.json
 
 FROM node:20-alpine AS app
 RUN apk add --no-cache tzdata
 WORKDIR /app
 COPY --from=api-build /app/dist ./dist
-COPY --from=api-build /app/node_modules ./node_modules
 COPY --from=ng-build /app/public ./public
 COPY package*.json ./
+RUN npm ci --omit=dev --ignore-scripts
 
 ENV NODE_ENV=production
 ENV PORT=3000
