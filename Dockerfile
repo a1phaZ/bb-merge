@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-RUN npx tsc --project tsconfig.build.json
+RUN npx -p typescript tsc --project tsconfig.build.json
 
 FROM node:20-alpine AS app
 RUN apk add --no-cache tzdata
