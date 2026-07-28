@@ -9,9 +9,9 @@ FROM node:20-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-RUN npx tsc
+RUN npx tsc --project tsconfig.build.json
 
 FROM node:20-alpine AS app
 RUN apk add --no-cache tzdata
