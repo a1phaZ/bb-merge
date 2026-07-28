@@ -16,10 +16,11 @@ RUN npx tsc --project tsconfig.build.json
 FROM node:20-alpine AS app
 RUN apk add --no-cache tzdata
 WORKDIR /app
+COPY --from=api-build /app/node_modules ./node_modules
 COPY --from=api-build /app/dist ./dist
 COPY --from=ng-build /app/public ./public
 COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm prune --omit=dev
 
 ENV NODE_ENV=production
 ENV PORT=3000
