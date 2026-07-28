@@ -60,13 +60,31 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
             </mat-form-field>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.apiUrl' | translate }}</mat-label>
-              <input matInput [formField]="providerForm.apiUrl" placeholder="https://bitbucket.example.com">
+              <input matInput [formField]="providerForm.apiUrl"
+                [placeholder]="providerModel().type === 'github' ? 'https://api.github.com'
+                  : providerModel().type === 'gitlab' ? 'https://gitlab.com'
+                  : 'https://bitbucket.example.com'">
               @if (providerForm.apiUrl().touched() && providerForm.apiUrl().invalid()) {
                 @for (err of providerForm.apiUrl().errors(); track err.kind) {
                   <mat-error>{{ err.message }}</mat-error>
                 }
               }
             </mat-form-field>
+
+            <div class="api-url-hint">
+              <mat-icon class="hint-icon">info</mat-icon>
+              @switch (providerModel().type) {
+                @case ('github') {
+                  <span [innerHTML]="'providers.apiUrlHintGithub' | translate"></span>
+                }
+                @case ('gitlab') {
+                  <span [innerHTML]="'providers.apiUrlHintGitlab' | translate"></span>
+                }
+                @case ('bitbucket') {
+                  <span [innerHTML]="'providers.apiUrlHintBitbucket' | translate"></span>
+                }
+              }
+            </div>
             <mat-form-field appearance="fill">
               <mat-label>{{ 'providers.token' | translate }}</mat-label>
               <input matInput type="password" [formField]="providerForm.token">
@@ -225,10 +243,12 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
     .repo-error { color: #c62828; font-size: 13px; }
     .selected-repo { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #2e7d32; }
     .full-width { width: 100%; }
-    .token-hint { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #555; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; margin: -4px 0 12px; grid-column: span 2; }
-    .token-hint code { background: #e0e0e0; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+    .token-hint,
+    .api-url-hint { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #555; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; margin: -4px 0 12px; grid-column: span 2; }
+    .token-hint code,
+    .api-url-hint code { background: #e0e0e0; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
     .hint-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
-    @media (max-width: 600px) { .token-hint { grid-column: span 1; } }
+    @media (max-width: 600px) { .token-hint, .api-url-hint { grid-column: span 1; } }
   `,
 })
 export class ProvidersComponent {

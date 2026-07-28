@@ -78,6 +78,9 @@
   "providers.loading": "Загрузка...",
   "providers.invalidUrl": "Введите корректный URL",
   "providers.tokenHintBitbucket": "Создайте HTTP-токен в Bitbucket: <b>Профиль → Manage Account → HTTP Access Tokens</b>. Для Cloud: <b>Account Settings → App Passwords</b>.",
+  "providers.apiUrlHintGithub": "Используйте <b>https://api.github.com</b> — это REST API, а не URL профиля.",
+  "providers.apiUrlHintGitlab": "Используйте <b>https://gitlab.com</b> для SaaS, или <b>https://gitlab.example.com</b> для self-hosted.",
+  "providers.apiUrlHintBitbucket": "Используйте URL вашего Bitbucket Server, например <b>https://bitbucket.example.com</b>.",
   "providers.tokenHintGitlab": "Создайте Personal Access Token в GitLab: <b>Settings → Access Tokens → Add new token</b> с правами <code>api</code>.",
   "providers.tokenHintGithub": "Создайте Personal Access Token в GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code>, fine-grained: <code>Contents: Write</code>).",
 
