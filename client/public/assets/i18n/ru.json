@@ -77,6 +77,9 @@
   "providers.selectRepo": "Выберите репозиторий",
   "providers.loading": "Загрузка...",
   "providers.invalidUrl": "Введите корректный URL",
+  "providers.tokenHintBitbucket": "Создайте HTTP-токен в Bitbucket: <b>Профиль → Manage Account → HTTP Access Tokens</b>. Для Cloud: <b>Account Settings → App Passwords</b>.",
+  "providers.tokenHintGitlab": "Создайте Personal Access Token в GitLab: <b>Settings → Access Tokens → Add new token</b> с правами <code>api</code>.",
+  "providers.tokenHintGithub": "Создайте Personal Access Token в GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code>, fine-grained: <code>Contents: Write</code>).",
 
   "mrNew.title": "Новый MR",
   "mrNew.provider": "Провайдер",

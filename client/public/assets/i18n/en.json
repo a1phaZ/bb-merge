@@ -77,6 +77,9 @@
   "providers.selectRepo": "Select repository",
   "providers.loading": "Loading...",
   "providers.invalidUrl": "Enter a valid URL",
+  "providers.tokenHintBitbucket": "Generate an HTTP access token in Bitbucket: <b>Profile → Manage Account → HTTP Access Tokens</b>. For Cloud: <b>Account Settings → App Passwords</b>.",
+  "providers.tokenHintGitlab": "Generate a Personal Access Token in GitLab: <b>Settings → Access Tokens → Add new token</b> with <code>api</code> scope.",
+  "providers.tokenHintGithub": "Generate a Personal Access Token in GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code> scope, fine-grained: <code>Contents: Write</code>).",
 
   "mrNew.title": "New Merge Request",
   "mrNew.provider": "Provider",
