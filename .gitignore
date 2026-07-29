@@ -9,5 +9,6 @@ dist/
 /data/
 /data-test/
 /logs/
-public/browser/
+public/
 client/.angular/
+client/coverage/
