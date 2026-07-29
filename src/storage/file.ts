@@ -55,6 +55,8 @@ export class FileStorageProvider implements StorageProvider {
     return providers.map(p => ({
       ...p,
       token: '••••••••',
+      defaultProject: p.defaultProject,
+      defaultRepo: p.defaultRepo,
     }));
   }
 

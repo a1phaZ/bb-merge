@@ -46,6 +46,8 @@ export class SQLiteStorageProvider implements StorageProvider {
         token_encrypted TEXT NOT NULL,
         default_target TEXT DEFAULT 'main',
         default_title_prefix TEXT DEFAULT 'Merge',
+        default_project TEXT,
+        default_repo TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
@@ -122,6 +124,15 @@ export class SQLiteStorageProvider implements StorageProvider {
         FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `);
+
+    // Migration: add columns for existing databases
+    for (const col of ['default_project', 'default_repo']) {
+      try {
+        this.db.exec(`ALTER TABLE providers ADD COLUMN ${col} TEXT`);
+      } catch {
+        // column already exists — ignore
+      }
+    }
   }
 
   async getProviders(): Promise<ProviderConfig[]> {
@@ -134,6 +145,8 @@ export class SQLiteStorageProvider implements StorageProvider {
       token: '••••••••',
       defaultTarget: r.default_target,
       defaultTitlePrefix: r.default_title_prefix,
+      defaultProject: r.default_project,
+      defaultRepo: r.default_repo,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     }));
@@ -150,6 +163,8 @@ export class SQLiteStorageProvider implements StorageProvider {
       token: cryptoService.decrypt(row.token_encrypted),
       defaultTarget: row.default_target,
       defaultTitlePrefix: row.default_title_prefix,
+      defaultProject: row.default_project,
+      defaultRepo: row.default_repo,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
@@ -162,14 +177,14 @@ export class SQLiteStorageProvider implements StorageProvider {
 
     if (existing) {
       this.db.prepare(`
-        UPDATE providers SET name=?, type=?, api_url=?, token_encrypted=?, default_target=?, default_title_prefix=?, updated_at=?
+        UPDATE providers SET name=?, type=?, api_url=?, token_encrypted=?, default_target=?, default_title_prefix=?, default_project=?, default_repo=?, updated_at=?
         WHERE id=?
-      `).run(provider.name, provider.type, provider.apiUrl, encrypted, provider.defaultTarget || null, provider.defaultTitlePrefix || null, now, provider.id);
+      `).run(provider.name, provider.type, provider.apiUrl, encrypted, provider.defaultTarget || null, provider.defaultTitlePrefix || null, provider.defaultProject || null, provider.defaultRepo || null, now, provider.id);
     } else {
       this.db.prepare(`
-        INSERT INTO providers (id, name, type, api_url, token_encrypted, default_target, default_title_prefix, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(provider.id, provider.name, provider.type, provider.apiUrl, encrypted, provider.defaultTarget || null, provider.defaultTitlePrefix || null, now, now);
+        INSERT INTO providers (id, name, type, api_url, token_encrypted, default_target, default_title_prefix, default_project, default_repo, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(provider.id, provider.name, provider.type, provider.apiUrl, encrypted, provider.defaultTarget || null, provider.defaultTitlePrefix || null, provider.defaultProject || null, provider.defaultRepo || null, now, now);
     }
   }
 
