@@ -287,12 +287,30 @@ export class ProvidersComponent {
   });
 
   loadRepos() {
-    const f = this.providerModel();
-    if (!f.apiUrl || !f.token) return;
-
     this.loadingRepos.set(true);
     this.reposError.set(null);
     this.repos.set([]);
+
+    if (this.editingId()) {
+      this.service.getRepos(this.editingId()!).subscribe({
+        next: (repos) => {
+          this.repos.set(repos);
+          this.filteredRepos.set(repos);
+          this.loadingRepos.set(false);
+        },
+        error: () => {
+          this.reposError.set('Failed to load repositories');
+          this.loadingRepos.set(false);
+        },
+      });
+      return;
+    }
+
+    const f = this.providerModel();
+    if (!f.apiUrl || !f.token) {
+      this.loadingRepos.set(false);
+      return;
+    }
 
     this.service.exploreRepos(f.type, f.apiUrl, f.token).subscribe({
       next: (repos) => {

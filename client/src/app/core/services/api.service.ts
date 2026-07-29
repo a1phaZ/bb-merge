@@ -56,6 +56,10 @@ export class ApiService {
     return this.http.post<{ ok: boolean; message: string }>(`/api/v1/providers/${id}/test`, {});
   }
 
+  getProviderRepos(id: string) {
+    return this.http.get<RepoInfo[]>(`/api/v1/providers/${id}/repos`);
+  }
+
   exploreProviderRepos(type: string, apiUrl: string, token: string) {
     return this.http.post<RepoInfo[]>('/api/v1/providers/repos/explore', { type, apiUrl, token });
   }

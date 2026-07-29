@@ -58,6 +58,15 @@ router.post('/', validate(providerCreateSchema), quotaProviders, asyncHandler(as
   res.status(201).json({ ...provider, token: '••••••••' });
 }));
 
+router.get('/:id/repos', asyncHandler(async (req: Request, res: Response) => {
+  const storage = await getStorageProvider();
+  const provider = await storage.getProvider(req.params.id);
+  if (!provider) throw new AppError(404, 'Provider not found');
+  const client = ProviderFactory.create(provider);
+  const repos = await client.listRepos();
+  res.json(repos);
+}));
+
 router.post('/repos/explore', validate(providerExploreReposSchema), asyncHandler(async (req: Request, res: Response) => {
   const { type, apiUrl, token } = req.body;
   const tempConfig: ProviderConfig = {
