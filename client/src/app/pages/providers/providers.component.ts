@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ProvidersService } from '../../core/services/providers.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -23,7 +24,7 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
     CommonModule, FormField,
     MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
-    MatSnackBarModule, MatTooltipModule,
+    MatSnackBarModule, MatTooltipModule, MatProgressBarModule,
     TranslatePipe, EmptyStateComponent,
   ],
   template: `
@@ -167,6 +168,9 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
 
     <mat-card>
       <mat-card-content>
+        @if (providersLoading()) {
+          <mat-progress-bar mode="indeterminate" class="provider-loader"></mat-progress-bar>
+        }
         @if (providers().length > 0) {
           <table mat-table [dataSource]="providers()" class="full-width">
             <ng-container matColumnDef="name">
@@ -249,6 +253,7 @@ import { ProviderCreate, RepoInfo } from '../../shared/models/provider.model';
     .api-url-hint code { background: #e0e0e0; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
     .hint-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
     @media (max-width: 600px) { .token-hint, .api-url-hint { grid-column: span 1; } }
+    .provider-loader { margin-bottom: 16px; }
   `,
 })
 export class ProvidersComponent {
@@ -256,6 +261,7 @@ export class ProvidersComponent {
   private snackBar = inject(MatSnackBar);
 
   providers = computed(() => this.service.providers.value() ?? []);
+  providersLoading = this.service.providers.isLoading;
   showForm = signal(false);
   editingId = signal<string | null>(null);
   saving = signal(false);

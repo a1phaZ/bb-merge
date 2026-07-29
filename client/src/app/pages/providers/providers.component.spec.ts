@@ -21,11 +21,11 @@ describe('ProvidersComponent', () => {
 
   beforeEach(async () => {
     cacheMock = { get: vi.fn().mockReturnValue(testProviders), set: vi.fn(), invalidate: vi.fn() };
-    apiMock = { providers: { value: vi.fn().mockReturnValue(testProviders), reload: vi.fn(), error: undefined as any, status: vi.fn() as any } };
+    apiMock = { providers: { value: vi.fn().mockReturnValue(testProviders), reload: vi.fn(), error: undefined as any, status: vi.fn() as any, isLoading: vi.fn().mockReturnValue(false) } };
     translateMock = { setFallbackLang: vi.fn(), use: vi.fn(), translate: vi.fn().mockReturnValue(vi.fn().mockReturnValue('')) };
 
     providersMock = {
-      providers: { value: vi.fn().mockReturnValue(testProviders), reload: vi.fn(), error: undefined as any, status: vi.fn() as any },
+      providers: { value: vi.fn().mockReturnValue(testProviders), reload: vi.fn(), error: undefined as any, status: vi.fn() as any, isLoading: vi.fn().mockReturnValue(false) },
       get: vi.fn(),
       create: vi.fn().mockReturnValue(of({})),
       update: vi.fn().mockReturnValue(of({})),
