@@ -133,7 +133,12 @@ import { debounceTime, Subject } from 'rxjs';
                       <div class="detail-branches">
                         <strong>{{ 'history.branches' | translate }}:</strong>
                         @for (b of detailBranches(); track $index) {
-                          <div class="branch-chip">{{ b }}</div>
+                          <div class="branch-chip" [class]="'status-' + b.status">
+                            {{ b.branch }}
+                            @if (b.status !== 'unknown') {
+                              <span class="branch-status">({{ b.status }})</span>
+                            }
+                          </div>
                         }
                       </div>
                     }
@@ -183,7 +188,14 @@ import { debounceTime, Subject } from 'rxjs';
     .detail-row { padding: 16px 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; background: #fafafa; }
     @media (max-width: 768px) { .detail-row { grid-template-columns: 1fr; } }
     .detail-info p { margin: 4px 0; font-size: 13px; }
-    .branch-chip { display: inline-block; padding: 2px 8px; margin: 2px; border-radius: 4px; background: #e0e0e0; font-size: 12px; }
+    .branch-chip { display: inline-block; padding: 2px 8px; margin: 2px; border-radius: 4px; font-size: 12px; }
+    .branch-chip.status-merged { background: #e8f5e9; color: #2e7d32; }
+    .branch-chip.status-created { background: #e3f2fd; color: #1565c0; }
+    .branch-chip.status-conflicted { background: #fff3e0; color: #e65100; }
+    .branch-chip.status-skipped { background: #f5f5f5; color: #757575; }
+    .branch-chip.status-error { background: #ffebee; color: #c62828; }
+    .branch-chip.status-unknown { background: #e0e0e0; color: #616161; }
+    .branch-status { margin-left: 4px; font-weight: 500; }
     .detail-stats .stat { margin: 4px 0; font-size: 13px; }
     .green { color: #2e7d32; } .red { color: #c62828; } .orange { color: #e65100; } .gray { color: #757575; }
   `,
@@ -208,10 +220,19 @@ export class HistoryComponent {
 
   private searchSubject = new Subject<void>();
 
-  detailBranches = computed(() => {
+  detailBranches = computed<Array<{ branch: string; status: string; prId?: number; error?: string }>>(() => {
     const d = this.detail();
     if (!d?.resultsJson) return [];
-    try { return JSON.parse(d.resultsJson); } catch { return []; }
+    try {
+      const parsed = JSON.parse(d.resultsJson);
+      if (Array.isArray(parsed)) {
+        if (parsed.length > 0 && typeof parsed[0] === 'string') {
+          return (parsed as string[]).map(b => ({ branch: b, status: 'unknown' }));
+        }
+        return parsed as Array<{ branch: string; status: string; prId?: number; error?: string }>;
+      }
+    } catch { /* ignore */ }
+    return [];
   });
 
   constructor() {

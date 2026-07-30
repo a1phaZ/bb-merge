@@ -55,6 +55,9 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
       const mode = dryRun ? 'Dry run' : 'Merge request';
       addProgressEvent(sessionId, { type: 'info', message: `${mode} starting for ${body.project}/${body.repo}` });
 
+      let merged = 0, conflicts = 0, skipped = 0, errs = 0;
+      const results: Array<{ branch: string; status: string; prId?: number; error?: string }> = [];
+
       for (const branch of body.branches) {
         addProgressEvent(sessionId, { type: 'info', message: `Processing branch ${branch}`, branch });
 
@@ -68,6 +71,8 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
 
         if (!branchExists) {
           addProgressEvent(sessionId, { type: 'warning', message: `Branch ${branch} not found, skipping`, branch });
+          skipped++;
+          results.push({ branch, status: 'skipped', error: 'Branch not found' });
           continue;
         }
 
@@ -80,6 +85,8 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
 
         if (existingPR) {
           addProgressEvent(sessionId, { type: 'warning', message: `PR already exists (#${existingPR.id}), skipping`, branch, prId: existingPR.id });
+          skipped++;
+          results.push({ branch, status: 'skipped', error: 'PR already exists', prId: existingPR.id });
           continue;
         }
 
@@ -114,6 +121,8 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
           addProgressEvent(sessionId, { type: 'success', message: `Created PR #${pr.id}`, branch, prId: pr.id });
         } catch (error: any) {
           addProgressEvent(sessionId, { type: 'error', message: `Failed to create PR: ${error.message}`, branch });
+          errs++;
+          results.push({ branch, status: 'error', error: `Failed to create PR: ${error.message}` });
           continue;
         }
 
@@ -122,10 +131,14 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
           mergeStatus = await client.checkMergeConflicts(body.project, body.repo, pr.id);
         } catch {
           addProgressEvent(sessionId, { type: 'warning', message: `Could not check merge conflicts for PR #${pr.id}`, branch, prId: pr.id });
+          errs++;
+          results.push({ branch, status: 'error', error: 'Could not check merge conflicts', prId: pr.id });
           continue;
         }
 
         if (mergeStatus.conflicted) {
+          conflicts++;
+          results.push({ branch, status: 'conflicted', prId: pr.id });
           try {
             const committer = await client.getLastCommitter(body.project, body.repo, branch);
             if (committer) {
@@ -138,12 +151,17 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
         } else if (autoMerge) {
           try {
             await client.mergePR(body.project, body.repo, pr.id, pr.version, strategy);
+            merged++;
+            results.push({ branch, status: 'merged', prId: pr.id });
             addProgressEvent(sessionId, { type: 'success', message: `PR #${pr.id} merged successfully`, branch, prId: pr.id });
           } catch (error: any) {
             addProgressEvent(sessionId, { type: 'error', message: `Failed to merge PR #${pr.id}: ${error.message}`, branch, prId: pr.id });
+            errs++;
+            results.push({ branch, status: 'error', error: `Failed to merge: ${error.message}`, prId: pr.id });
           }
         } else {
           addProgressEvent(sessionId, { type: 'info', message: `PR #${pr.id} created (no conflicts, auto-merge disabled)`, branch, prId: pr.id });
+          results.push({ branch, status: 'created', prId: pr.id });
         }
       }
 
@@ -162,7 +180,7 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
         }
       }
 
-      await storage.saveHistory({
+        await storage.saveHistory({
         id: uuid(),
         providerId: body.providerId,
         providerType: provider.type,
@@ -171,12 +189,12 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
         target: body.target,
         autoMerge,
         strategy,
-        resultsJson: JSON.stringify(body.branches),
+        resultsJson: JSON.stringify(results.length > 0 ? results : body.branches),
         totalBranches: body.branches.length,
-        mergedCount: 0,
-        conflictsCount: 0,
-        skippedCount: 0,
-        errorsCount: 0,
+        mergedCount: merged,
+        conflictsCount: conflicts,
+        skippedCount: skipped,
+        errorsCount: errs,
         createdAt: new Date().toISOString(),
       });
 

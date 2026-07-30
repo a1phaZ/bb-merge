@@ -307,8 +307,11 @@ export class MergeRequestNewComponent {
       }));
       if (config.resultsJson) {
         try {
-          const branches = JSON.parse(config.resultsJson);
-          if (Array.isArray(branches)) {
+          const parsed = JSON.parse(config.resultsJson);
+          if (Array.isArray(parsed)) {
+            const branches = parsed.length > 0 && typeof parsed[0] === 'object'
+              ? (parsed as Array<{ branch: string }>).map(b => b.branch)
+              : parsed as string[];
             this.branchesText.set(branches.join('\n'));
           }
         } catch { }
