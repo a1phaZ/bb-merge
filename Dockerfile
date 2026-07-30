@@ -12,7 +12,7 @@ COPY package*.json ./
 RUN npm ci --no-audit --no-fund --fetch-timeout=120000
 COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-RUN npm run build && npm prune --omit=dev --no-audit --no-fund
+RUN npx tsc --project tsconfig.build.json && npm prune --omit=dev --no-audit --no-fund
 
 FROM node:22-alpine AS app
 RUN apk add --no-cache tzdata
