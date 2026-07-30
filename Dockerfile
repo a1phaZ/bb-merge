@@ -1,8 +1,7 @@
 FROM node:22-alpine AS ng-build
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm install --legacy-peer-deps --no-audit --no-fund --fetch-timeout=120000
+RUN npm install --legacy-peer-deps --no-audit --no-fund --fetch-timeout=120000
 COPY client/ ./
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
@@ -10,11 +9,10 @@ RUN npm run build
 FROM node:22-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --fetch-timeout=120000
+RUN npm ci --no-audit --no-fund --fetch-timeout=120000
 COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-RUN npx tsc --project tsconfig.build.json
+RUN npm run build && npm prune --omit=dev --no-audit --no-fund
 
 FROM node:22-alpine AS app
 RUN apk add --no-cache tzdata
@@ -22,8 +20,6 @@ WORKDIR /app
 COPY --from=api-build /app/node_modules ./node_modules
 COPY --from=api-build /app/dist ./dist
 COPY --from=ng-build /app/public ./public
-COPY package*.json ./
-RUN npm prune --omit=dev
 
 ENV NODE_ENV=production
 ENV PORT=3000
