@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: ghcr.io/a1phaZ/bb-merge-caddy:latest
+    image: ghcr.io/a1phaz/bb-merge-caddy:latest
     ports:
       - "80:80"
       - "443:443"
@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: ghcr.io/a1phaZ/bb-merge-app:latest
+    image: ghcr.io/a1phaz/bb-merge-app:latest
     expose:
       - "3000"
     environment:

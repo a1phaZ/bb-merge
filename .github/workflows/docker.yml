@@ -6,8 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  APP_IMAGE: ghcr.io/a1phaZ/bb-merge-app
-  CADDY_IMAGE: ghcr.io/a1phaZ/bb-merge-caddy
+  APP_IMAGE: ghcr.io/a1phaz/bb-merge-app
+  CADDY_IMAGE: ghcr.io/a1phaz/bb-merge-caddy
 
 jobs:
   build:
