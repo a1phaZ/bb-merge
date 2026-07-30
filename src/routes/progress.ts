@@ -40,16 +40,20 @@ export function addProgressEvent(sessionId: string, event: Omit<ProgressEvent, '
 
   const data = JSON.stringify(full);
   for (const client of session.clients) {
-    try { client.write(`data: ${data}\n\n`); } catch { removeClient(session, client); }
+    if (!client.writableEnded) {
+      try { client.write(`data: ${data}\n\n`); } catch { removeClient(session, client); }
+    }
   }
 
   if (event.type === 'error') {
     session.done = true;
     for (const client of session.clients) {
-      try {
-        client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
-        client.end();
-      } catch { removeClient(session, client); }
+      if (!client.writableEnded) {
+        try {
+          client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+          client.end();
+        } catch { removeClient(session, client); }
+      }
     }
   }
 }
@@ -60,10 +64,12 @@ export function finishProgress(sessionId: string) {
 
   session.done = true;
   for (const client of session.clients) {
-    try {
-      client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
-      client.end();
-    } catch { removeClient(session, client); }
+    if (!client.writableEnded) {
+      try {
+        client.write(`data: {"type":"done","timestamp":"${new Date().toISOString()}"}\n\n`);
+        client.end();
+      } catch { removeClient(session, client); }
+    }
   }
 
   setTimeout(() => sessions.delete(sessionId), 60_000);
