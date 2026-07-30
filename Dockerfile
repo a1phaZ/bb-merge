@@ -2,7 +2,7 @@ FROM node:22-alpine AS ng-build
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --legacy-peer-deps --no-audit --no-fund --network-timeout 120000
+    npm install --legacy-peer-deps --no-audit --no-fund --fetch-timeout=120000
 COPY client/ ./
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
@@ -11,7 +11,7 @@ FROM node:20-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --network-timeout 120000
+    npm ci --fetch-timeout=120000
 COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
 RUN npx tsc --project tsconfig.build.json
