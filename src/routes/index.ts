@@ -15,6 +15,7 @@ import authRouter from './auth';
 const v1Router = Router();
 
 v1Router.use('/auth', authRouter);
+v1Router.use('/progress', progressRouter);
 v1Router.use(authenticate);
 v1Router.use('/merge-requests', mergeRequestsV2Router);
 v1Router.use('/providers', providersRouter);
@@ -22,7 +23,6 @@ v1Router.use('/history', historyRouter);
 v1Router.use('/templates', templatesRouter);
 v1Router.use('/logs', logsRouter);
 v1Router.use('/settings', settingsRouter);
-v1Router.use('/progress', progressRouter);
 v1Router.use('/webhooks', webhooksRouter);
 
 const apiRouter = Router();
