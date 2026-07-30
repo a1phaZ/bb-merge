@@ -7,7 +7,7 @@ COPY client/ ./
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
-FROM node:20-alpine AS api-build
+FROM node:22-alpine AS api-build
 WORKDIR /app
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -16,7 +16,7 @@ COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
 RUN npx tsc --project tsconfig.build.json
 
-FROM node:20-alpine AS app
+FROM node:22-alpine AS app
 RUN apk add --no-cache tzdata
 WORKDIR /app
 COPY --from=api-build /app/node_modules ./node_modules
