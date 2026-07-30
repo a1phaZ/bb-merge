@@ -153,6 +153,7 @@ import { debounceTime, Subject } from 'rxjs';
                         <mat-icon>replay</mat-icon> {{ 'history.rerun' | translate }}
                       </button>
                     </div>
+                    <pre style="font-size:11px;background:#f5f5f5;padding:8px;margin-top:8px;grid-column:1/-1;overflow:auto;max-height:200px">{{ detail() | json }}</pre>
                   </div>
                 </td>
               </tr>
@@ -272,8 +273,8 @@ export class HistoryComponent {
     }
     this.expandedId.set(id);
     this.historyService.getItem(id).subscribe({
-      next: (item) => this.detail.set(item),
-      error: () => this.expandedId.set(null),
+      next: (item) => { console.log('[history] detail received:', item); this.detail.set(item); },
+      error: (err) => { console.warn('[history] detail error:', err); this.expandedId.set(null); },
     });
   }
 
