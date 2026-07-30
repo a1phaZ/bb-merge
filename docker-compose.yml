@@ -1,9 +1,6 @@
 services:
   caddy:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: caddy
+    image: ghcr.io/a1phaZ/bb-merge-caddy:latest
     ports:
       - "80:80"
       - "443:443"
@@ -17,10 +14,7 @@ services:
     restart: unless-stopped
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app
+    image: ghcr.io/a1phaZ/bb-merge-app:latest
     expose:
       - "3000"
     environment:

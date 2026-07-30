@@ -14,3 +14,4 @@ client/coverage/
 public/
 src/__tests__/
 src/**/*.test.ts
+.github/
