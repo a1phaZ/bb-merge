@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MergeRequestNewComponent } from './merge-request-new.component';
 import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
@@ -37,7 +36,6 @@ describe('MergeRequestNewComponent', () => {
       imports: [MergeRequestNewComponent],
       providers: [
         provideHttpClient(),
-        provideNoopAnimations(),
         { provide: ApiService, useValue: apiMock },
         { provide: MergeRequestService, useValue: mrServiceMock },
         { provide: TemplatesService, useValue: templatesMock },

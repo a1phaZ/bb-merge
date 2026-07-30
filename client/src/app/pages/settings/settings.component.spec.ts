@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { SettingsComponent } from './settings.component';
 import { ApiService } from '../../core/services/api.service';
 import { SettingsService } from '../../core/services/settings.service';
@@ -36,7 +35,6 @@ describe('SettingsComponent', () => {
       imports: [SettingsComponent],
       providers: [
         provideHttpClient(),
-        provideNoopAnimations(),
         { provide: ApiService, useValue: apiMock },
         { provide: SettingsService, useValue: settingsMock },
         { provide: CacheService, useValue: cacheMock },

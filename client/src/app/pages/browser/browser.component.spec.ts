@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { BrowserComponent } from './browser.component';
 import { ApiService } from '../../core/services/api.service';
 import { CacheService } from '../../core/cache/cache.service';
@@ -25,7 +24,6 @@ describe('BrowserComponent', () => {
       imports: [BrowserComponent],
       providers: [
         provideHttpClient(),
-        provideNoopAnimations(),
         { provide: ApiService, useValue: apiMock },
         { provide: CacheService, useValue: cacheMock },
         { provide: TranslateService, useValue: translateMock },
