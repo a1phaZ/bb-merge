@@ -11,3 +11,4 @@ client/node_modules/
 client/.git/
 client/.angular/
 client/coverage/
+public/
