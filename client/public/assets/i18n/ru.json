@@ -82,7 +82,7 @@
   "providers.apiUrlHintGitlab": "Используйте <b>https://gitlab.com</b> для SaaS, или <b>https://gitlab.example.com</b> для self-hosted.",
   "providers.apiUrlHintBitbucket": "Используйте URL вашего Bitbucket Server, например <b>https://bitbucket.example.com</b>.",
   "providers.tokenHintGitlab": "Создайте Personal Access Token в GitLab: <b>Settings → Access Tokens → Add new token</b> с правами <code>api</code>.",
-  "providers.tokenHintGithub": "Создайте Personal Access Token в GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code>, fine-grained: <code>Contents: Write</code>).",
+  "providers.tokenHintGithub": "Создайте Personal Access Token в GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code>, fine-grained: <code>Contents: Read+Write</code> + <code>Pull requests: Read+Write</code>).",
 
   "mrNew.title": "Новый MR",
   "mrNew.provider": "Провайдер",

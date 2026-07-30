@@ -82,7 +82,7 @@
   "providers.apiUrlHintGitlab": "Use <b>https://gitlab.com</b> for SaaS, or <b>https://gitlab.example.com</b> for self-hosted instances.",
   "providers.apiUrlHintBitbucket": "Use your Bitbucket Server URL, e.g. <b>https://bitbucket.example.com</b>.",
   "providers.tokenHintGitlab": "Generate a Personal Access Token in GitLab: <b>Settings → Access Tokens → Add new token</b> with <code>api</code> scope.",
-  "providers.tokenHintGithub": "Generate a Personal Access Token in GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code> scope, fine-grained: <code>Contents: Write</code>).",
+  "providers.tokenHintGithub": "Generate a Personal Access Token in GitHub: <b>Settings → Developer Settings → Personal Access Tokens</b> (classic: <code>repo</code> scope, fine-grained: <code>Contents: Read+Write</code> + <code>Pull requests: Read+Write</code>).",
 
   "mrNew.title": "New Merge Request",
   "mrNew.provider": "Provider",
