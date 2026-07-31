@@ -145,7 +145,7 @@ export class FileStorageProvider implements StorageProvider {
         entry = { date: key, total: 0, merged: 0, conflicts: 0, errors: 0 };
         map.set(key, entry);
       }
-      entry.total++;
+      entry.total += record.totalBranches;
       entry.merged += record.mergedCount;
       entry.conflicts += record.conflictsCount;
       entry.errors += record.errorsCount;

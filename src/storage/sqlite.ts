@@ -291,7 +291,7 @@ export class SQLiteStorageProvider implements StorageProvider {
     cutoff.setDate(cutoff.getDate() - days);
     const rows = this.db.prepare(`
       SELECT DATE(created_at) as date,
-             COUNT(*) as total,
+             SUM(total_branches) as total,
              SUM(merged_count) as merged,
              SUM(conflicts_count) as conflicts,
              SUM(errors_count) as errors

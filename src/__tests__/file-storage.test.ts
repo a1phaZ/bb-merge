@@ -148,4 +148,55 @@ describe('FileStorageProvider', () => {
     expect(events).toHaveLength(1);
     expect(events[0].eventType).toBe('pr:merged');
   });
+
+  it('computes history stats grouped by day with total branches', async () => {
+    const { FileStorageProvider } = await import('../storage/file');
+    const storage = new FileStorageProvider();
+
+    const daysAgo = (n: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return d.toISOString();
+    };
+
+    const makeRecord = (id: string, overrides: Partial<any>) => ({
+      id,
+      providerId: 'p1',
+      providerType: 'bitbucket',
+      project: 'PROJ',
+      repo: 'repo',
+      target: 'main',
+      autoMerge: true,
+      strategy: 'merge',
+      resultsJson: JSON.stringify([]),
+      totalBranches: 0,
+      mergedCount: 0,
+      conflictsCount: 0,
+      skippedCount: 0,
+      errorsCount: 0,
+      ...overrides,
+    });
+
+    await storage.saveHistory(makeRecord('h1', {
+      createdAt: daysAgo(0), totalBranches: 5, mergedCount: 3, conflictsCount: 1, errorsCount: 1,
+    }));
+    await storage.saveHistory(makeRecord('h2', {
+      createdAt: daysAgo(0), totalBranches: 2, mergedCount: 2, conflictsCount: 0, errorsCount: 0,
+    }));
+    await storage.saveHistory(makeRecord('h3', {
+      createdAt: daysAgo(10), totalBranches: 4, mergedCount: 4, conflictsCount: 0, errorsCount: 0,
+    }));
+
+    const stats = await storage.getHistoryStats(7);
+    expect(stats).toHaveLength(1);
+    expect(stats[0].total).toBe(7);
+    expect(stats[0].merged).toBe(5);
+    expect(stats[0].conflicts).toBe(1);
+    expect(stats[0].errors).toBe(1);
+
+    const allStats = await storage.getHistoryStats(30);
+    expect(allStats).toHaveLength(2);
+    expect(allStats.map(s => s.total).sort((a, b) => a - b)).toEqual([4, 7]);
+    expect(allStats[0].date <= allStats[1].date).toBe(true);
+  });
 });

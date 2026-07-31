@@ -184,7 +184,7 @@ interface StatsEntry {
     .chart-container { display: flex; gap: 8px; height: 200px; margin-top: 8px; }
     .chart-y-labels { display: flex; flex-direction: column; justify-content: space-between; padding: 2px 4px 22px 0; font-size: 11px; color: rgba(0,0,0,0.5); min-width: 32px; text-align: right; }
     .chart-bars { display: flex; flex: 1; align-items: flex-end; gap: 3px; }
-    .bar-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 4px; }
+    .bar-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 4px; height: 100%; justify-content: flex-end; }
     .bar-stack { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; transition: height 0.3s ease; }
     .bar { width: 100%; min-height: 1px; transition: height 0.3s ease; }
     .bar.merged { background: #2e7d32; }
