@@ -9,7 +9,7 @@ import { of } from 'rxjs';
 
 describe('HistoryComponent', () => {
   let fixture: ComponentFixture<HistoryComponent>;
-  let historyMock: { getList: ReturnType<typeof vi.fn>; getItem: ReturnType<typeof vi.fn>; deleteAll: ReturnType<typeof vi.fn> };
+  let historyMock: { getList: ReturnType<typeof vi.fn>; deleteAll: ReturnType<typeof vi.fn> };
   let apiMock: any;
   let cacheMock: any;
   let translateMock: any;
@@ -25,7 +25,6 @@ describe('HistoryComponent', () => {
     translateMock = { setFallbackLang: vi.fn(), use: vi.fn(), translate: vi.fn().mockReturnValue(vi.fn().mockReturnValue('')) };
     historyMock = {
       getList: vi.fn().mockReturnValue(of({ items: testItems, total: 1, page: 1, limit: 50 })),
-      getItem: vi.fn().mockReturnValue(of(testItems[0])),
       deleteAll: vi.fn().mockReturnValue(of(undefined)),
     };
 
@@ -65,16 +64,20 @@ describe('HistoryComponent', () => {
     const comp = fixture.componentInstance;
     comp.toggleDetail('h1');
     expect(comp.expandedId()).toBe('h1');
-    expect(historyMock.getItem).toHaveBeenCalledWith('h1');
+    expect(comp.detail()).toEqual(testItems[0]);
 
     comp.toggleDetail('h1');
     expect(comp.expandedId()).toBeNull();
+    expect(comp.detail()).toBeNull();
   });
 
   it('should parse detail branches', () => {
     const comp = fixture.componentInstance;
     comp.detail.set(testItems[0]);
-    expect(comp.detailBranches()).toEqual(['feature1', 'feature2']);
+    expect(comp.detailBranches()).toEqual([
+      { branch: 'feature1', status: 'unknown' },
+      { branch: 'feature2', status: 'unknown' },
+    ]);
   });
 
   it('should return empty array for invalid JSON', () => {

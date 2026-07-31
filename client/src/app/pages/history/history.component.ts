@@ -119,15 +119,15 @@ import { debounceTime, Subject } from 'rxjs';
             <tr mat-header-row *matHeaderRowDef="columns"></tr>
             <tr mat-row *matRowDef="let row; columns: columns;"></tr>
 
-            @if (expandedId()) {
-              <tr>
-                <td [attr.colspan]="columns.length">
+            <tr [style.display]="detail() ? 'table-row' : 'none'">
+              <td [attr.colspan]="columns.length">
+                @if (detail(); as d) {
                   <div class="detail-row">
                     <div class="detail-info">
-                      <p><strong>ID:</strong> {{ detail()?.id }}</p>
-                      <p><strong>{{ 'mrNew.strategy' | translate }}:</strong> {{ detail()?.strategy }}</p>
-                      <p><strong>{{ 'mrNew.autoMerge' | translate }}:</strong> {{ detail()?.autoMerge ? ('history.yes' | translate) : ('history.no' | translate) }}</p>
-                      <p><strong>{{ 'history.date' | translate }}:</strong> {{ detail()?.createdAt | date:'medium' }}</p>
+                      <p><strong>ID:</strong> {{ d.id }}</p>
+                      <p><strong>{{ 'mrNew.strategy' | translate }}:</strong> {{ d.strategy }}</p>
+                      <p><strong>{{ 'mrNew.autoMerge' | translate }}:</strong> {{ d.autoMerge ? ('history.yes' | translate) : ('history.no' | translate) }}</p>
+                      <p><strong>{{ 'history.date' | translate }}:</strong> {{ d.createdAt | date:'medium' }}</p>
                     </div>
                     @if (detailBranches().length > 0) {
                       <div class="detail-branches">
@@ -143,21 +143,20 @@ import { debounceTime, Subject } from 'rxjs';
                       </div>
                     }
                     <div class="detail-stats">
-                      <div class="stat"><span class="green">●</span> {{ 'history.mergedLabel' | translate }}: {{ detail()?.mergedCount }}</div>
-                      <div class="stat"><span class="red">●</span> {{ 'history.errors' | translate }}: {{ detail()?.errorsCount }}</div>
-                      <div class="stat"><span class="orange">●</span> {{ 'history.conflicts' | translate }}: {{ detail()?.conflictsCount }}</div>
-                      <div class="stat"><span class="gray">●</span> {{ 'history.skipped' | translate }}: {{ detail()?.skippedCount }}</div>
+                      <div class="stat"><span class="green">●</span> {{ 'history.mergedLabel' | translate }}: {{ d.mergedCount }}</div>
+                      <div class="stat"><span class="red">●</span> {{ 'history.errors' | translate }}: {{ d.errorsCount }}</div>
+                      <div class="stat"><span class="orange">●</span> {{ 'history.conflicts' | translate }}: {{ d.conflictsCount }}</div>
+                      <div class="stat"><span class="gray">●</span> {{ 'history.skipped' | translate }}: {{ d.skippedCount }}</div>
                     </div>
                     <div class="detail-actions">
-                      <button mat-stroked-button (click)="rerun(detail()!)" matTooltip="{{ 'history.rerun' | translate }}">
+                      <button mat-stroked-button (click)="rerun(d)" matTooltip="{{ 'history.rerun' | translate }}">
                         <mat-icon>replay</mat-icon> {{ 'history.rerun' | translate }}
                       </button>
                     </div>
-                    <pre style="font-size:11px;background:#f5f5f5;padding:8px;margin-top:8px;grid-column:1/-1;overflow:auto;max-height:200px">{{ detail() | json }}</pre>
                   </div>
-                </td>
-              </tr>
-            }
+                }
+              </td>
+            </tr>
           </table>
         }
 
@@ -272,10 +271,9 @@ export class HistoryComponent {
       return;
     }
     this.expandedId.set(id);
-    this.historyService.getItem(id).subscribe({
-      next: (item) => { console.log('[history] detail received:', item); this.detail.set(item); },
-      error: (err) => { console.warn('[history] detail error:', err); this.expandedId.set(null); },
-    });
+    const found = this.items().find(item => item.id === id);
+    this.detail.set(found ?? null);
+    if (!found) this.expandedId.set(null);
   }
 
   clearAll() {
