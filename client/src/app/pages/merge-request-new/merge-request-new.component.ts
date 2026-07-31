@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { form, required, FormField } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +17,7 @@ import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { TemplatesService } from '../../core/services/templates.service';
 import { HistoryRecord } from '../../shared/models/history.model';
+import { Template } from '../../shared/models/template.model';
 import { ProgressEvent } from '../../shared/models/merge-result.model';
 import { Subscription } from 'rxjs';
 
@@ -258,6 +259,7 @@ export class MergeRequestNewComponent {
   private templatesService = inject(TemplatesService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   step = signal<'form' | 'progress'>('form');
   executing = signal(false);
@@ -319,7 +321,38 @@ export class MergeRequestNewComponent {
       setTimeout(() =>
         this.snackBar.open('Configuration loaded from history', 'Close', { duration: 3000 })
       );
+    } else {
+      const templateId = this.route.snapshot.queryParamMap.get('template');
+      if (templateId) {
+        this.templatesService.get(templateId).subscribe({
+          next: (t) => this.applyTemplate(t),
+          error: () => this.snackBar.open('Failed to load template', 'Close', { duration: 3000 }),
+        });
+      }
     }
+  }
+
+  private applyTemplate(t: Template) {
+    this.mrModel.update(f => ({
+      ...f,
+      providerId: t.providerId || '',
+      project: t.project || '',
+      repo: t.repo || '',
+      target: t.target || 'main',
+      titlePrefix: t.titlePrefix || 'Merge',
+      description: t.description || '',
+      autoMerge: t.autoMerge ?? false,
+      strategy: t.strategy || 'merge',
+    }));
+    if (t.branchesJson) {
+      try {
+        const parsed = JSON.parse(t.branchesJson);
+        if (Array.isArray(parsed)) {
+          this.branchesText.set(parsed.join('\n'));
+        }
+      } catch { }
+    }
+    this.snackBar.open(`Template "${t.name}" loaded`, 'Close', { duration: 3000 });
   }
 
   protected onProviderChange() {

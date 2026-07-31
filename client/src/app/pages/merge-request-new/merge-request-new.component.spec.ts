@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { MergeRequestNewComponent } from './merge-request-new.component';
 import { ApiService } from '../../core/services/api.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
@@ -13,6 +14,7 @@ describe('MergeRequestNewComponent', () => {
   let mrServiceMock: any;
   let templatesMock: any;
   let translateMock: any;
+  let routeMock: any;
   let progressSubject: Subject<any>;
 
   const testProviders = [{ id: 'p1', name: 'GitHub', type: 'github', apiUrl: '', token: '', createdAt: '', updatedAt: '' }];
@@ -20,6 +22,7 @@ describe('MergeRequestNewComponent', () => {
   beforeEach(async () => {
     progressSubject = new Subject();
     translateMock = { setFallbackLang: vi.fn(), use: vi.fn(), translate: vi.fn().mockReturnValue(vi.fn().mockReturnValue('')) };
+    routeMock = { snapshot: { queryParamMap: { get: vi.fn().mockReturnValue(null) } } };
     apiMock = {
       providers: { value: vi.fn().mockReturnValue(testProviders), reload: vi.fn(), error: undefined as any, status: vi.fn() as any },
       getBranches: vi.fn().mockReturnValue(of([{ displayId: 'feature1', latestCommit: 'abc' }, { displayId: 'fix1', latestCommit: 'def' }])),
@@ -30,12 +33,14 @@ describe('MergeRequestNewComponent', () => {
     };
     templatesMock = {
       create: vi.fn().mockReturnValue(of({})),
+      get: vi.fn().mockReturnValue(of({})),
     };
 
     await TestBed.configureTestingModule({
       imports: [MergeRequestNewComponent],
       providers: [
         provideHttpClient(),
+        { provide: ActivatedRoute, useValue: routeMock },
         { provide: ApiService, useValue: apiMock },
         { provide: MergeRequestService, useValue: mrServiceMock },
         { provide: TemplatesService, useValue: templatesMock },
@@ -65,6 +70,42 @@ describe('MergeRequestNewComponent', () => {
     const comp = fixture.componentInstance;
     expect(comp.providers().length).toBe(1);
     expect(comp.providers()[0].name).toBe('GitHub');
+  });
+
+  it('should load template from query param', () => {
+    routeMock.snapshot.queryParamMap.get.mockReturnValue('t1');
+    templatesMock.get.mockReturnValue(of({
+      id: 't1', name: 'Deploy', providerId: 'p1', project: 'proj', repo: 'repo',
+      target: 'staging', branchesJson: '["feature1","feature2"]',
+      titlePrefix: 'Ship', description: 'desc', autoMerge: true, strategy: 'squash',
+      createdAt: '', updatedAt: '',
+    }));
+
+    fixture = TestBed.createComponent(MergeRequestNewComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    expect(templatesMock.get).toHaveBeenCalledWith('t1');
+    expect(comp.mrModel().providerId).toBe('p1');
+    expect(comp.mrModel().project).toBe('proj');
+    expect(comp.mrModel().repo).toBe('repo');
+    expect(comp.mrModel().target).toBe('staging');
+    expect(comp.mrModel().titlePrefix).toBe('Ship');
+    expect(comp.mrModel().autoMerge).toBe(true);
+    expect(comp.mrModel().strategy).toBe('squash');
+    expect(comp.branchesText()).toBe('feature1\nfeature2');
+  });
+
+  it('should handle template load error', () => {
+    routeMock.snapshot.queryParamMap.get.mockReturnValue('missing');
+    templatesMock.get.mockReturnValue(throwError(() => new Error('fail')));
+
+    fixture = TestBed.createComponent(MergeRequestNewComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    expect(comp.mrModel().providerId).toBe('');
+    expect(comp.branchesText()).toBe('');
   });
 
   it('should update model field', () => {
