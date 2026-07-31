@@ -68,7 +68,7 @@ import { debounceTime, Subject } from 'rxjs';
     <mat-card>
       <mat-card-content>
         @if (items().length > 0) {
-          <table mat-table [dataSource]="items()" class="full-width">
+          <table mat-table [dataSource]="items()" class="full-width" multiTemplateDataRows>
             <ng-container matColumnDef="createdAt">
               <th mat-header-cell *matHeaderCellDef>{{ 'history.date' | translate }}</th>
               <td mat-cell *matCellDef="let r">{{ r.createdAt | timeAgo }}</td>
@@ -116,47 +116,47 @@ import { debounceTime, Subject } from 'rxjs';
                 </button>
               </td>
             </ng-container>
+            <ng-container matColumnDef="expandedDetail">
+              <td mat-cell *matCellDef="let row" [attr.colspan]="columns.length">
+                <div class="detail-row" [style.display]="expandedId() === row.id ? 'grid' : 'none'">
+                  @let branches = branchesFor(row);
+                  <div class="detail-info">
+                    <p><strong>ID:</strong> {{ row.id }}</p>
+                    <p><strong>{{ 'mrNew.strategy' | translate }}:</strong> {{ row.strategy }}</p>
+                    <p><strong>{{ 'mrNew.autoMerge' | translate }}:</strong> {{ row.autoMerge ? ('history.yes' | translate) : ('history.no' | translate) }}</p>
+                    <p><strong>{{ 'history.date' | translate }}:</strong> {{ row.createdAt | date:'medium' }}</p>
+                  </div>
+                  @if (branches.length > 0) {
+                    <div class="detail-branches">
+                      <strong>{{ 'history.branches' | translate }}:</strong>
+                      @for (b of branches; track $index) {
+                        <div class="branch-chip" [class]="'status-' + b.status">
+                          {{ b.branch }}
+                          @if (b.status !== 'unknown') {
+                            <span class="branch-status">({{ b.status }})</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                  <div class="detail-stats">
+                    <div class="stat"><span class="green">●</span> {{ 'history.mergedLabel' | translate }}: {{ row.mergedCount }}</div>
+                    <div class="stat"><span class="red">●</span> {{ 'history.errors' | translate }}: {{ row.errorsCount }}</div>
+                    <div class="stat"><span class="orange">●</span> {{ 'history.conflicts' | translate }}: {{ row.conflictsCount }}</div>
+                    <div class="stat"><span class="gray">●</span> {{ 'history.skipped' | translate }}: {{ row.skippedCount }}</div>
+                  </div>
+                  <div class="detail-actions">
+                    <button mat-stroked-button (click)="rerun(row)" matTooltip="{{ 'history.rerun' | translate }}">
+                      <mat-icon>replay</mat-icon> {{ 'history.rerun' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
             <tr mat-header-row *matHeaderRowDef="columns"></tr>
             <tr mat-row *matRowDef="let row; columns: columns;"></tr>
-
-            <tr [style.display]="detail() ? 'table-row' : 'none'">
-              <td [attr.colspan]="columns.length">
-                @if (detail(); as d) {
-                  <div class="detail-row">
-                    <div class="detail-info">
-                      <p><strong>ID:</strong> {{ d.id }}</p>
-                      <p><strong>{{ 'mrNew.strategy' | translate }}:</strong> {{ d.strategy }}</p>
-                      <p><strong>{{ 'mrNew.autoMerge' | translate }}:</strong> {{ d.autoMerge ? ('history.yes' | translate) : ('history.no' | translate) }}</p>
-                      <p><strong>{{ 'history.date' | translate }}:</strong> {{ d.createdAt | date:'medium' }}</p>
-                    </div>
-                    @if (detailBranches().length > 0) {
-                      <div class="detail-branches">
-                        <strong>{{ 'history.branches' | translate }}:</strong>
-                        @for (b of detailBranches(); track $index) {
-                          <div class="branch-chip" [class]="'status-' + b.status">
-                            {{ b.branch }}
-                            @if (b.status !== 'unknown') {
-                              <span class="branch-status">({{ b.status }})</span>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                    <div class="detail-stats">
-                      <div class="stat"><span class="green">●</span> {{ 'history.mergedLabel' | translate }}: {{ d.mergedCount }}</div>
-                      <div class="stat"><span class="red">●</span> {{ 'history.errors' | translate }}: {{ d.errorsCount }}</div>
-                      <div class="stat"><span class="orange">●</span> {{ 'history.conflicts' | translate }}: {{ d.conflictsCount }}</div>
-                      <div class="stat"><span class="gray">●</span> {{ 'history.skipped' | translate }}: {{ d.skippedCount }}</div>
-                    </div>
-                    <div class="detail-actions">
-                      <button mat-stroked-button (click)="rerun(d)" matTooltip="{{ 'history.rerun' | translate }}">
-                        <mat-icon>replay</mat-icon> {{ 'history.rerun' | translate }}
-                      </button>
-                    </div>
-                  </div>
-                }
-              </td>
-            </tr>
+            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
+                [style.display]="expandedId() === row.id ? 'table-row' : 'none'"></tr>
           </table>
         }
 
@@ -213,15 +213,13 @@ export class HistoryComponent {
   filterProvider = signal('');
   filterSearch = signal('');
   expandedId = signal<string | null>(null);
-  detail = signal<HistoryRecord | null>(null);
 
   providers = computed(() => this.api.providers.value() ?? []);
   columns = ['createdAt', 'providerType', 'project', 'target', 'totalBranches', 'mergedCount', 'errorsCount', 'actions'];
 
   private searchSubject = new Subject<void>();
 
-  detailBranches = computed<Array<{ branch: string; status: string; prId?: number; error?: string }>>(() => {
-    const d = this.detail();
+  branchesFor(d: HistoryRecord): Array<{ branch: string; status: string; prId?: number; error?: string }> {
     if (!d?.resultsJson) return [];
     try {
       const parsed = JSON.parse(d.resultsJson);
@@ -233,7 +231,7 @@ export class HistoryComponent {
       }
     } catch { /* ignore */ }
     return [];
-  });
+  }
 
   constructor() {
     this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.load());
@@ -265,15 +263,7 @@ export class HistoryComponent {
   }
 
   toggleDetail(id: string) {
-    if (this.expandedId() === id) {
-      this.expandedId.set(null);
-      this.detail.set(null);
-      return;
-    }
-    this.expandedId.set(id);
-    const found = this.items().find(item => item.id === id);
-    this.detail.set(found ?? null);
-    if (!found) this.expandedId.set(null);
+    this.expandedId.set(this.expandedId() === id ? null : id);
   }
 
   clearAll() {

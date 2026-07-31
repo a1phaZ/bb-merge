@@ -64,17 +64,23 @@ describe('HistoryComponent', () => {
     const comp = fixture.componentInstance;
     comp.toggleDetail('h1');
     expect(comp.expandedId()).toBe('h1');
-    expect(comp.detail()).toEqual(testItems[0]);
 
     comp.toggleDetail('h1');
     expect(comp.expandedId()).toBeNull();
-    expect(comp.detail()).toBeNull();
+  });
+
+  it('should render expanded detail row', () => {
+    const comp = fixture.componentInstance;
+    comp.toggleDetail('h1');
+    fixture.detectChanges();
+    const el = fixture.nativeElement;
+    expect(el.querySelector('.detail-row')).toBeTruthy();
+    expect(el.querySelector('.detail-row').style.display).toBe('grid');
   });
 
   it('should parse detail branches', () => {
     const comp = fixture.componentInstance;
-    comp.detail.set(testItems[0]);
-    expect(comp.detailBranches()).toEqual([
+    expect(comp.branchesFor(testItems[0])).toEqual([
       { branch: 'feature1', status: 'unknown' },
       { branch: 'feature2', status: 'unknown' },
     ]);
@@ -82,8 +88,7 @@ describe('HistoryComponent', () => {
 
   it('should return empty array for invalid JSON', () => {
     const comp = fixture.componentInstance;
-    comp.detail.set({ ...testItems[0], resultsJson: 'invalid' });
-    expect(comp.detailBranches()).toEqual([]);
+    expect(comp.branchesFor({ ...testItems[0], resultsJson: 'invalid' })).toEqual([]);
   });
 
   it('should filter by provider', () => {
