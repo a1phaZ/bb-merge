@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getStorageProvider } from '../storage/factory';
 import { ProviderFactory } from '../providers/factory';
 import { AppError } from '../middleware/error-handler';
+import { requireFeature } from '../middleware/plan-gates';
 import { logger } from '../logger';
 import { validate, webhookRegisterSchema } from '../validation';
 
@@ -63,7 +64,7 @@ router.delete('/events', asyncHandler(async (_req: Request, res: Response) => {
   res.json({ ok: true });
 }));
 
-router.post('/register/:providerId', validate(webhookRegisterSchema), asyncHandler(async (req: Request, res: Response) => {
+router.post('/register/:providerId', requireFeature('webhooks'), validate(webhookRegisterSchema), asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const provider = await storage.getProvider(req.params.providerId);
   if (!provider) throw new AppError(404, 'Provider not found');

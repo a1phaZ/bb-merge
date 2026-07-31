@@ -1,12 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getStorageProvider } from '../storage/factory';
-
-const PLAN_LIMITS: Record<string, { providers: number; mrPerMonth: number }> = {
-  'free': { providers: 1, mrPerMonth: 3 },
-  'pro': { providers: 5, mrPerMonth: 100 },
-  'business': { providers: Infinity, mrPerMonth: 1000 },
-  'self-hosted': { providers: Infinity, mrPerMonth: Infinity },
-};
+import { getPlanLimits } from '../plans';
 
 export async function quotaProviders(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (!req.user) {
@@ -14,7 +8,7 @@ export async function quotaProviders(req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const limit = PLAN_LIMITS[req.user.plan] || PLAN_LIMITS['free'];
+  const limit = getPlanLimits(req.user.plan);
   if (limit.providers === Infinity) {
     next();
     return;
@@ -45,7 +39,7 @@ export async function quotaMR(req: Request, res: Response, next: NextFunction): 
     return;
   }
 
-  const limit = PLAN_LIMITS[req.user.plan] || PLAN_LIMITS['free'];
+  const limit = getPlanLimits(req.user.plan);
   if (limit.mrPerMonth === Infinity) {
     next();
     return;

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { getStorageProvider } from '../storage/factory';
 import { User } from '../storage/interfaces';
 import { authenticate, signToken } from '../middleware/auth';
+import { getPlanLimits } from '../plans';
 
 const router = Router();
 
@@ -53,7 +54,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
     res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan },
+      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt },
     });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });
@@ -88,7 +89,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     res.json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan },
+      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt },
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });
@@ -103,7 +104,7 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan });
+    res.json({ id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt });
   } catch {
     res.status(500).json({ error: 'Failed to get user' });
   }
@@ -117,19 +118,22 @@ router.get('/usage', authenticate, async (req: Request, res: Response) => {
     const mrCount = await storage.getUsageCount(req.user!.userId, 'create_mr', startOfMonth);
     const providers = await storage.getProviders();
 
-    const planLimits: Record<string, { providers: number; mrPerMonth: number }> = {
-      'free': { providers: 1, mrPerMonth: 3 },
-      'pro': { providers: 5, mrPerMonth: 100 },
-      'business': { providers: Infinity, mrPerMonth: 1000 },
-      'self-hosted': { providers: Infinity, mrPerMonth: Infinity },
-    };
-
-    const limits = planLimits[req.user!.plan] || planLimits['free'];
+    const limits = getPlanLimits(req.user!.plan);
+    const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+    const finite = (v: number): number | null => (Number.isFinite(v) ? v : null);
 
     res.json({
       plan: req.user!.plan,
-      providers: { current: providers.length, limit: limits.providers === Infinity ? null : limits.providers },
-      mr: { current: mrCount, limit: limits.mrPerMonth === Infinity ? null : limits.mrPerMonth },
+      providers: { current: providers.length, limit: finite(limits.providers) },
+      mr: { current: mrCount, limit: finite(limits.mrPerMonth) },
+      limits: {
+        providers: finite(limits.providers),
+        mrPerMonth: finite(limits.mrPerMonth),
+        historyDays: finite(limits.historyDays),
+        templates: limits.templates,
+        webhooks: limits.webhooks,
+      },
+      resetDate,
     });
   } catch {
     res.status(500).json({ error: 'Failed to get usage' });

@@ -20,6 +20,10 @@ vi.mock('../storage/factory', () => ({
 function createApp() {
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { userId: 'u1', email: 'test@example.com', role: 'operator', plan: 'pro' };
+    next();
+  });
   app.use('/api/v1/templates', templatesRouter);
   app.use(errorHandler);
   return app;

@@ -8,6 +8,7 @@ let mockFinished = false;
 const mockStorage = {
   getProvider: vi.fn(),
   saveHistory: vi.fn(),
+  logUsage: vi.fn(),
 };
 
 const mockProviders: Record<string, any> = {};
@@ -53,6 +54,10 @@ beforeAll(async () => {
   const router = (await import('../routes/merge-requests-v2')).default;
   app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { userId: 'u1', email: 'test@example.com', role: 'operator', plan: 'self-hosted' };
+    next();
+  });
   app.use('/api/v1/merge-requests', router);
 });
 
@@ -108,6 +113,7 @@ describe('POST /api/v1/merge-requests (v2)', () => {
     expect(mockClient.createPR).toHaveBeenCalled();
     expect(mockClient.checkMergeConflicts).toHaveBeenCalled();
     expect(mockStorage.saveHistory).toHaveBeenCalled();
+    expect(mockStorage.logUsage).toHaveBeenCalledWith('u1', 'create_mr', 'p1');
     expect(mockFinished).toBe(true);
     expect(mockProgressEvents.some((e: any) => e.message.includes('Created PR'))).toBe(true);
   });
@@ -128,6 +134,7 @@ describe('POST /api/v1/merge-requests (v2)', () => {
     expect(mockClient.createPR).not.toHaveBeenCalled();
     expect(mockClient.checkMergeConflicts).toHaveBeenCalledWith('PROJ', 'my-repo', 0);
     expect(mockStorage.saveHistory).not.toHaveBeenCalled();
+    expect(mockStorage.logUsage).not.toHaveBeenCalled();
     expect(mockFinished).toBe(true);
     expect(mockProgressEvents.some((e: any) => e.message.includes('[DRY RUN] Would create PR'))).toBe(true);
     expect(mockProgressEvents.some((e: any) => e.message.includes('Dry run completed'))).toBe(true);

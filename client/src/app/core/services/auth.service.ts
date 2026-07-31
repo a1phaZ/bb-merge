@@ -9,6 +9,7 @@ export interface AuthUser {
   displayName: string;
   role: string;
   plan: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -20,6 +21,14 @@ export interface UsageInfo {
   plan: string;
   providers: { current: number; limit: number | null };
   mr: { current: number; limit: number | null };
+  limits: {
+    providers: number | null;
+    mrPerMonth: number | null;
+    historyDays: number | null;
+    templates: boolean;
+    webhooks: boolean;
+  };
+  resetDate: string;
 }
 
 @Injectable({ providedIn: 'root' })

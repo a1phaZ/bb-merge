@@ -199,4 +199,72 @@ describe('FileStorageProvider', () => {
     expect(allStats.map(s => s.total).sort((a, b) => a - b)).toEqual([4, 7]);
     expect(allStats[0].date <= allStats[1].date).toBe(true);
   });
+
+  it('filters history records older than maxAgeDays', async () => {
+    const { FileStorageProvider } = await import('../storage/file');
+    const storage = new FileStorageProvider();
+
+    const daysAgo = (n: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return d.toISOString();
+    };
+
+    const makeRecord = (id: string, createdAt: string) => ({
+      id,
+      providerId: 'p1',
+      providerType: 'bitbucket',
+      project: 'PROJ',
+      repo: 'repo',
+      target: 'main',
+      autoMerge: true,
+      strategy: 'merge',
+      resultsJson: JSON.stringify([]),
+      totalBranches: 1,
+      mergedCount: 0,
+      conflictsCount: 0,
+      skippedCount: 0,
+      errorsCount: 0,
+      createdAt,
+    });
+
+    await storage.saveHistory(makeRecord('recent', daysAgo(2)));
+    await storage.saveHistory(makeRecord('old', daysAgo(30)));
+
+    const recent = await storage.getHistory({ maxAgeDays: 7 });
+    expect(recent.total).toBe(1);
+    expect(recent.items[0].id).toBe('recent');
+
+    const all = await storage.getHistory();
+    expect(all.total).toBe(2);
+
+    expect(await storage.getHistoryItem('recent', 7)).not.toBeNull();
+    expect(await storage.getHistoryItem('old', 7)).toBeNull();
+    expect(await storage.getHistoryItem('old')).not.toBeNull();
+  });
+
+  it('logs and counts usage entries', async () => {
+    const { FileStorageProvider } = await import('../storage/file');
+    const storage = new FileStorageProvider();
+
+    await storage.saveUser({
+      id: 'u1',
+      email: 'u1@example.com',
+      passwordHash: 'hash',
+      displayName: 'User',
+      role: 'operator',
+      plan: 'free',
+      authProvider: 'local',
+      createdAt: new Date().toISOString(),
+    });
+
+    const start = new Date();
+    await storage.logUsage('u1', 'create_mr', 'p1');
+    await storage.logUsage('u1', 'create_mr', 'p2');
+    await storage.logUsage('u1', 'other_action', 'p1');
+    await storage.logUsage('u2', 'create_mr', 'p1');
+
+    expect(await storage.getUsageCount('u1', 'create_mr', start.toISOString())).toBe(2);
+    expect(await storage.getUsageCount('u1', 'create_mr', new Date().toISOString())).toBe(0);
+  });
 });

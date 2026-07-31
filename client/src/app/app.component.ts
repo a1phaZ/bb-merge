@@ -33,6 +33,9 @@ import { AuthService } from './core/services/auth.service';
         <span class="spacer"></span>
 
         @if (auth.isAuthenticated()) {
+          <button mat-button class="plan-badge" routerLink="/account">
+            {{ 'plan.' + (auth.user()?.plan || 'free') | translate }}
+          </button>
           <span class="user-email">{{ auth.user()?.email }}</span>
           <button mat-icon-button (click)="logout()" matTooltip="Sign Out">
             <mat-icon>logout</mat-icon>
@@ -130,6 +133,13 @@ import { AuthService } from './core/services/auth.service';
                 <span matListItemTitle>{{ 'nav.settings' | translate }}</span>
               }
             </a>
+            <a mat-list-item routerLink="/account" routerLinkActive="active-link"
+              matTooltip="{{ !drawerExpanded() ? ('nav.account' | translate) : '' }}">
+              <mat-icon matListItemIcon>account_circle</mat-icon>
+              @if (drawerExpanded()) {
+                <span matListItemTitle>{{ 'nav.account' | translate }}</span>
+              }
+            </a>
           </mat-nav-list>
         </mat-drawer>
 
@@ -155,6 +165,7 @@ import { AuthService } from './core/services/auth.service';
     mat-drawer-content { min-height: calc(100vh - 64px); }
     .active-link { background: rgba(63, 81, 181, 0.12); }
     .active-link .mat-icon { color: #3f51b5; }
+    .plan-badge { margin-right: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; }
   `,
 })
 export class AppComponent {

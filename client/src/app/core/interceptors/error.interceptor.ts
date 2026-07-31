@@ -8,7 +8,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error) => {
-      const msg = error.error?.error || error.statusText || 'Unknown error';
+      const body = error.error;
+      const msg = error.status === 402 && body?.message
+        ? body.message
+        : (body?.error || error.statusText || 'Unknown error');
       snackBar.open(msg, 'Close', { duration: 5000, panelClass: 'error-snackbar' });
       return throwError(() => error);
     }),

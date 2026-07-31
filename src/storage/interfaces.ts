@@ -23,6 +23,7 @@ export interface HistoryFilter {
   limit?: number;
   providerId?: string;
   search?: string;
+  maxAgeDays?: number;
 }
 
 export interface Template {
@@ -89,7 +90,7 @@ export interface StorageProvider {
   deleteProvider(id: string): Promise<void>;
 
   getHistory(filter?: HistoryFilter): Promise<PaginatedResult<HistoryRecord>>;
-  getHistoryItem(id: string): Promise<HistoryRecord | null>;
+  getHistoryItem(id: string, maxAgeDays?: number): Promise<HistoryRecord | null>;
   getHistoryStats(days?: number): Promise<StatsEntry[]>;
   saveHistory(record: HistoryRecord): Promise<void>;
   deleteHistory(): Promise<void>;

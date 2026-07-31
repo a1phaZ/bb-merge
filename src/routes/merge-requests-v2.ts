@@ -180,6 +180,14 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
         }
       }
 
+      if (req.user) {
+        try {
+          await storage.logUsage(req.user.userId, 'create_mr', body.providerId);
+        } catch (err: any) {
+          logger.error('Failed to log MR usage', { error: err.message });
+        }
+      }
+
         await storage.saveHistory({
         id: uuid(),
         providerId: body.providerId,

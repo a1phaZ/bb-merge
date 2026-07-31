@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
+import { requireFeature } from '../middleware/plan-gates';
 import { validate, templateCreateSchema, templateUpdateSchema } from '../validation';
 
 function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
@@ -9,6 +10,8 @@ function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
 }
 
 const router = Router();
+
+const requireTemplates = requireFeature('templates');
 
 router.get('/', asyncHandler(async (_req: Request, res: Response) => {
   const storage = await getStorageProvider();
@@ -23,7 +26,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json(template);
 }));
 
-router.post('/', validate(templateCreateSchema), asyncHandler(async (req: Request, res: Response) => {
+router.post('/', requireTemplates, validate(templateCreateSchema), asyncHandler(async (req: Request, res: Response) => {
   const { name, providerId, project, repo, target, branches, titlePrefix, description, autoMerge, strategy } = req.body;
 
   const storage = await getStorageProvider();
@@ -47,7 +50,7 @@ router.post('/', validate(templateCreateSchema), asyncHandler(async (req: Reques
   res.status(201).json(template);
 }));
 
-router.put('/:id', validate(templateUpdateSchema), asyncHandler(async (req: Request, res: Response) => {
+router.put('/:id', requireTemplates, validate(templateUpdateSchema), asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   const existing = await storage.getTemplate(req.params.id);
   if (!existing) throw new AppError(404, 'Template not found');
@@ -63,7 +66,7 @@ router.put('/:id', validate(templateUpdateSchema), asyncHandler(async (req: Requ
   res.json(updated);
 }));
 
-router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
+router.delete('/:id', requireTemplates, asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
   await storage.deleteTemplate(req.params.id);
   res.json({ ok: true });

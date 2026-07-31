@@ -206,6 +206,11 @@ export class SQLiteStorageProvider implements StorageProvider {
       const s = `%${filter.search}%`;
       params.push(s, s);
     }
+    if (filter?.maxAgeDays) {
+      const cutoff = new Date(Date.now() - filter.maxAgeDays * 86_400_000).toISOString();
+      conditions.push('created_at >= ?');
+      params.push(cutoff);
+    }
 
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
@@ -243,8 +248,15 @@ export class SQLiteStorageProvider implements StorageProvider {
     return { items, total, page, limit };
   }
 
-  async getHistoryItem(id: string): Promise<HistoryRecord | null> {
-    const row = this.db.prepare('SELECT * FROM history WHERE id = ?').get(id) as any;
+  async getHistoryItem(id: string, maxAgeDays?: number): Promise<HistoryRecord | null> {
+    let query = 'SELECT * FROM history WHERE id = ?';
+    const params: any[] = [id];
+    if (maxAgeDays) {
+      const cutoff = new Date(Date.now() - maxAgeDays * 86_400_000).toISOString();
+      query += ' AND created_at >= ?';
+      params.push(cutoff);
+    }
+    const row = this.db.prepare(query).get(...params) as any;
     if (!row) return null;
     return {
       id: row.id,

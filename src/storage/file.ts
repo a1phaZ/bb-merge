@@ -103,6 +103,10 @@ export class FileStorageProvider implements StorageProvider {
         h.project.toLowerCase().includes(s) || h.repo.toLowerCase().includes(s)
       );
     }
+    if (filter?.maxAgeDays) {
+      const cutoff = Date.now() - filter.maxAgeDays * 86_400_000;
+      filtered = filtered.filter(h => new Date(h.createdAt).getTime() >= cutoff);
+    }
 
     filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -114,9 +118,14 @@ export class FileStorageProvider implements StorageProvider {
     return { items, total: filtered.length, page, limit };
   }
 
-  async getHistoryItem(id: string): Promise<HistoryRecord | null> {
+  async getHistoryItem(id: string, maxAgeDays?: number): Promise<HistoryRecord | null> {
     const all = readJSON<HistoryRecord>('history');
-    return all.find(h => h.id === id) || null;
+    const item = all.find(h => h.id === id) || null;
+    if (item && maxAgeDays) {
+      const cutoff = Date.now() - maxAgeDays * 86_400_000;
+      if (new Date(item.createdAt).getTime() < cutoff) return null;
+    }
+    return item;
   }
 
   async saveHistory(record: HistoryRecord): Promise<void> {

@@ -35,6 +35,10 @@ vi.mock('../providers/factory', () => ({
 function createApp() {
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { userId: 'u1', email: 'test@example.com', role: 'operator', plan: 'self-hosted' };
+    next();
+  });
   app.use('/api/v1/providers', providersRouter);
   app.use(errorHandler);
   return app;

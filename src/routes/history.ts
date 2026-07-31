@@ -1,11 +1,18 @@
 import { Router, Request, Response } from 'express';
 import { getStorageProvider } from '../storage/factory';
+import { getPlanLimits } from '../plans';
 
 function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: any) => fn(req, res).catch(next);
 }
 
 const router = Router();
+
+function historyMaxAgeDays(req: Request): number | undefined {
+  if (!req.user) return undefined;
+  const days = getPlanLimits(req.user.plan).historyDays;
+  return Number.isFinite(days) ? days : undefined;
+}
 
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
@@ -15,6 +22,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     limit: limit ? parseInt(limit) : undefined,
     providerId,
     search,
+    maxAgeDays: historyMaxAgeDays(req),
   });
   res.json(result);
 }));
@@ -26,13 +34,14 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
     res.status(400).json({ error: 'days must be between 1 and 365' });
     return;
   }
-  const stats = await storage.getHistoryStats(days);
+  const maxAge = historyMaxAgeDays(req);
+  const stats = await storage.getHistoryStats(maxAge && days > maxAge ? maxAge : days);
   res.json(stats);
 }));
 
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const storage = await getStorageProvider();
-  const item = await storage.getHistoryItem(req.params.id);
+  const item = await storage.getHistoryItem(req.params.id, historyMaxAgeDays(req));
   if (!item) {
     res.status(404).json({ error: 'History record not found' });
     return;
