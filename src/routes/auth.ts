@@ -6,6 +6,7 @@ import { getStorageProvider } from '../storage/factory';
 import { User } from '../storage/interfaces';
 import { authenticate, signToken } from '../middleware/auth';
 import { getPlanLimits } from '../plans';
+import { sanitizeUser } from '../billing';
 
 const router = Router();
 
@@ -54,7 +55,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
     res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt },
+      user: sanitizeUser(user),
     });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });
@@ -89,7 +90,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     res.json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt },
+      user: sanitizeUser(user),
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });
@@ -104,7 +105,7 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ id: user.id, email: user.email, displayName: user.displayName, role: user.role, plan: user.plan, createdAt: user.createdAt });
+    res.json(sanitizeUser(user));
   } catch {
     res.status(500).json({ error: 'Failed to get user' });
   }

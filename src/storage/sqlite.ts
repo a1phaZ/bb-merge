@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { ProviderConfig } from '../providers/interfaces';
-import { User, StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
+import { User, Subscription, StorageProvider, HistoryRecord, HistoryFilter, Template, WebhookEvent, PaginatedResult, StatsEntry } from './interfaces';
 import { cryptoService } from './crypto';
 import { config } from '../config';
 
@@ -132,6 +132,11 @@ export class SQLiteStorageProvider implements StorageProvider {
       } catch {
         // column already exists — ignore
       }
+    }
+    try {
+      this.db.exec(`ALTER TABLE users ADD COLUMN subscription_json TEXT`);
+    } catch {
+      // column already exists — ignore
     }
   }
 
@@ -446,9 +451,15 @@ export class SQLiteStorageProvider implements StorageProvider {
     }
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
-    const row = this.db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
-    if (!row) return null;
+  private mapUser(row: any): User {
+    let subscription: Subscription | undefined;
+    if (row.subscription_json) {
+      try {
+        subscription = JSON.parse(row.subscription_json);
+      } catch {
+        subscription = undefined;
+      }
+    }
     return {
       id: row.id,
       email: row.email,
@@ -459,38 +470,41 @@ export class SQLiteStorageProvider implements StorageProvider {
       authProvider: row.auth_provider,
       createdAt: row.created_at,
       lastLoginAt: row.last_login_at,
+      subscription,
     };
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const row = this.db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    if (!row) return null;
+    return this.mapUser(row);
   }
 
   async getUser(id: string): Promise<User | null> {
     const row = this.db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
     if (!row) return null;
-    return {
-      id: row.id,
-      email: row.email,
-      passwordHash: row.password_hash,
-      displayName: row.display_name,
-      role: row.role,
-      plan: row.plan,
-      authProvider: row.auth_provider,
-      createdAt: row.created_at,
-      lastLoginAt: row.last_login_at,
-    };
+    return this.mapUser(row);
+  }
+
+  async getUsers(): Promise<User[]> {
+    const rows = this.db.prepare('SELECT * FROM users').all() as any[];
+    return rows.map(r => this.mapUser(r));
   }
 
   async saveUser(user: User): Promise<void> {
     const now = new Date().toISOString();
+    const subscriptionJson = user.subscription ? JSON.stringify(user.subscription) : null;
     const existing = this.db.prepare('SELECT id FROM users WHERE id = ?').get(user.id);
     if (existing) {
       this.db.prepare(`
-        UPDATE users SET email=?, password_hash=?, display_name=?, role=?, plan=?, last_login_at=?
+        UPDATE users SET email=?, password_hash=?, display_name=?, role=?, plan=?, last_login_at=?, subscription_json=?
         WHERE id=?
-      `).run(user.email, user.passwordHash, user.displayName, user.role, user.plan, user.lastLoginAt || null, user.id);
+      `).run(user.email, user.passwordHash, user.displayName, user.role, user.plan, user.lastLoginAt || null, subscriptionJson, user.id);
     } else {
       this.db.prepare(`
-        INSERT INTO users (id, email, password_hash, display_name, role, plan, auth_provider, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(user.id, user.email, user.passwordHash, user.displayName, user.role, user.plan, user.authProvider, now);
+        INSERT INTO users (id, email, password_hash, display_name, role, plan, auth_provider, created_at, subscription_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(user.id, user.email, user.passwordHash, user.displayName, user.role, user.plan, user.authProvider, now, subscriptionJson);
     }
   }
 

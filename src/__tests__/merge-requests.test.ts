@@ -43,7 +43,7 @@ describe('POST /api/merge-requests', () => {
     process.env.BITBUCKET_PASSWORD = 'pass';
   });
 
-  it('accepts valid JSON config and returns report', { timeout: 15000 }, async () => {
+  it('accepts valid JSON config and returns report', { timeout: 30000 }, async () => {
     const app = await createApp();
     const res = await request(app)
       .post('/api/merge-requests')

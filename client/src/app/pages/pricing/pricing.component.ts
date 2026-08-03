@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
 import { TranslatePipe } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 
 interface PlanCard {
@@ -90,16 +91,24 @@ const FEATURES: PlanFeatureRow[] = [
           <mat-card-actions align="end">
             @if (isCurrent(plan.id)) {
               <button mat-stroked-button disabled>{{ 'pricing.currentPlan' | translate }}</button>
-            } @else {
-              <button mat-raised-button [color]="plan.featured ? 'primary' : undefined" disabled
-                matTooltip="{{ 'pricing.upgradeSoon' | translate }}">
+            } @else if (isLocked(plan.id)) {
+              <button mat-stroked-button disabled matTooltip="{{ 'pricing.upgradeSoon' | translate }}">
                 {{ 'pricing.upgrade' | translate }}
+              </button>
+            } @else {
+              <button mat-raised-button [color]="plan.featured ? 'primary' : undefined"
+                [disabled]="checking() !== null" (click)="upgrade(plan.id)">
+                {{ checking() === plan.id ? ('pricing.checkout' | translate) : ('pricing.upgrade' | translate) }}
               </button>
             }
           </mat-card-actions>
         </mat-card>
       }
     </div>
+
+    @if (upgradeError()) {
+      <div class="upgrade-error">{{ 'pricing.checkoutError' | translate }}</div>
+    }
   `,
   styles: `
     .pricing-header { text-align: center; margin-bottom: 32px; }
@@ -114,6 +123,7 @@ const FEATURES: PlanFeatureRow[] = [
     .feature-row { height: 44px; }
     .feature-value { font-weight: 500; }
     mat-card-actions { padding-bottom: 12px; }
+    .upgrade-error { max-width: 560px; margin: 20px auto 0; text-align: center; color: #c62828; }
   `,
 })
 export class PricingComponent {
@@ -122,9 +132,31 @@ export class PricingComponent {
   plans = PLANS;
   features = FEATURES;
 
+  checking = signal<string | null>(null);
+  upgradeError = signal(false);
+
   currentPlan = computed(() => this.auth.user()?.plan ?? 'free');
 
   isCurrent(id: string): boolean {
     return this.currentPlan() === id;
+  }
+
+  isLocked(id: string): boolean {
+    return id === 'self-hosted';
+  }
+
+  async upgrade(planId: string) {
+    if (this.checking() !== null) return;
+    this.upgradeError.set(false);
+    this.checking.set(planId);
+    try {
+      const res = await firstValueFrom(this.auth.startCheckout(planId as 'pro' | 'business'));
+      sessionStorage.setItem('mr_payment_id', res.paymentId);
+      window.location.assign(res.confirmationUrl);
+    } catch {
+      this.upgradeError.set(true);
+    } finally {
+      this.checking.set(null);
+    }
   }
 }

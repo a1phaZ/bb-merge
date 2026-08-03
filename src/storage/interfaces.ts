@@ -65,6 +65,19 @@ export interface StatsEntry {
   errors: number;
 }
 
+export type SubscriptionStatus = 'active' | 'past_due' | 'canceled';
+
+export interface Subscription {
+  plan: 'pro' | 'business';
+  status: SubscriptionStatus;
+  provider: 'yookassa';
+  paymentMethodId?: string;
+  currentPeriodEnd: string;
+  canceledAt?: string;
+  lastPaymentId?: string;
+  retryCount?: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -75,12 +88,14 @@ export interface User {
   authProvider: 'local' | 'oauth2' | 'oidc';
   createdAt: string;
   lastLoginAt?: string;
+  subscription?: Subscription;
 }
 
 export interface StorageProvider {
   // Users
   getUserByEmail(email: string): Promise<User | null>;
   getUser(id: string): Promise<User | null>;
+  getUsers(): Promise<User[]>;
   saveUser(user: User): Promise<void>;
   getUsageCount(userId: string, action: string, since: string): Promise<number>;
   logUsage(userId: string, action: string, providerId?: string): Promise<void>;

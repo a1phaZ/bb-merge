@@ -11,6 +11,7 @@ import logsRouter from './logs';
 import settingsRouter from './settings';
 import progressRouter from './progress';
 import authRouter from './auth';
+import billingRouter from './billing';
 
 const v1Router = Router();
 
@@ -30,6 +31,7 @@ const apiRouter = Router();
 apiRouter.use('/merge-requests', mergeRequestsRouter);
 apiRouter.use('/webhooks', webhooksRouter);
 apiRouter.use('/v1', v1Router);
+apiRouter.use('/billing', billingRouter);
 
 const router = Router();
 
