@@ -7,6 +7,7 @@ ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 FROM node:22-alpine AS api-build
+RUN apk add --no-cache build-base python3
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund --fetch-timeout=120000
