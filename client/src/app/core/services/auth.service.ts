@@ -101,7 +101,7 @@ export class AuthService {
   }
 
   cancelSubscription() {
-    return this.http.post<{ subscription: SubscriptionInfo }>('/api/billing/cancel').pipe(
+    return this.http.post<{ subscription: SubscriptionInfo }>('/api/billing/cancel', null).pipe(
       tap(res => {
         this.user.update(u => (u ? { ...u, subscription: res.subscription } : u));
         localStorage.setItem('mr_auth', JSON.stringify({ token: this.token(), user: this.user() }));

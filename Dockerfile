@@ -4,7 +4,7 @@ COPY client/package*.json ./
 RUN npm install --legacy-peer-deps --no-audit --no-fund --fetch-timeout=120000
 COPY client/ ./
 ENV NODE_OPTIONS="--max-old-space-size=2048"
-RUN npm run build
+RUN CI=1 npm run build
 
 FROM node:22-alpine AS api-build
 RUN apk add --no-cache build-base python3
