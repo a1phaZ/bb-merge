@@ -1,8 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
+import { By } from '@angular/platform-browser';
+import { signal } from '@angular/core';
+import { MatExpansionPanel } from '@angular/material/expansion';
 import { MergeRequestNewComponent } from './merge-request-new.component';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { TemplatesService } from '../../core/services/templates.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -15,6 +19,7 @@ describe('MergeRequestNewComponent', () => {
   let templatesMock: any;
   let translateMock: any;
   let routeMock: any;
+  let authMock: any;
   let progressSubject: Subject<any>;
 
   const testProviders = [{ id: 'p1', name: 'GitHub', type: 'github', apiUrl: '', token: '', createdAt: '', updatedAt: '' }];
@@ -35,6 +40,10 @@ describe('MergeRequestNewComponent', () => {
       create: vi.fn().mockReturnValue(of({})),
       get: vi.fn().mockReturnValue(of({})),
     };
+    authMock = {
+      user: signal({ id: 'u1', email: 'a@b.c', displayName: 'A', role: 'operator', plan: 'free' }),
+      canUseFeature: vi.fn((feature: string) => authMock.user().plan !== 'free'),
+    };
 
     await TestBed.configureTestingModule({
       imports: [MergeRequestNewComponent],
@@ -42,6 +51,7 @@ describe('MergeRequestNewComponent', () => {
         provideHttpClient(),
         { provide: ActivatedRoute, useValue: routeMock },
         { provide: ApiService, useValue: apiMock },
+        { provide: AuthService, useValue: authMock },
         { provide: MergeRequestService, useValue: mrServiceMock },
         { provide: TemplatesService, useValue: templatesMock },
         { provide: TranslateService, useValue: translateMock },
@@ -330,5 +340,44 @@ describe('MergeRequestNewComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.badge-dry')).toBeTruthy();
+  });
+
+  it('locks template and webhook features on free plan', () => {
+    const comp = fixture.componentInstance;
+    expect(comp.canUseTemplates()).toBe(false);
+    expect(comp.canUseWebhooks()).toBe(false);
+
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
+    comp.branchesText.set('feature1');
+    comp.execute();
+    comp.progressDone.set(true);
+    fixture.detectChanges();
+
+    const saveBtn = fixture.nativeElement.querySelectorAll('.form-actions button[mat-stroked-button]')[1];
+    expect(saveBtn?.hasAttribute('disabled')).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('lock');
+  });
+
+  it('disables webhook panel on free plan', () => {
+    const panel = fixture.debugElement.query(By.directive(MatExpansionPanel));
+    expect(panel?.componentInstance.disabled).toBe(true);
+  });
+
+  it('unlocks template and webhook features on paid plan', () => {
+    authMock.user.set({ id: 'u1', email: 'a@b.c', displayName: 'A', role: 'operator', plan: 'pro' });
+    const comp = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(comp.canUseTemplates()).toBe(true);
+    expect(comp.canUseWebhooks()).toBe(true);
+
+    comp.mrModel.update(f => ({ ...f, providerId: 'p1', project: 'proj', repo: 'repo' }));
+    comp.branchesText.set('feature1');
+    comp.execute();
+    comp.progressDone.set(true);
+    fixture.detectChanges();
+
+    const saveBtn = fixture.nativeElement.querySelectorAll('.form-actions button[mat-stroked-button]')[1];
+    expect(saveBtn?.hasAttribute('disabled')).toBe(false);
   });
 });

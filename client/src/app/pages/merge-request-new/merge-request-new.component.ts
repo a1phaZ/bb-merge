@@ -12,8 +12,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { MergeRequestService } from '../../core/services/merge-request.service';
 import { TemplatesService } from '../../core/services/templates.service';
 import { HistoryRecord } from '../../shared/models/history.model';
@@ -42,7 +44,7 @@ interface MrFormData {
     CommonModule, FormField,
     MatCardModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule, MatExpansionModule,
+    MatSlideToggleModule, MatProgressBarModule, MatSnackBarModule, MatExpansionModule, MatTooltipModule,
     TranslatePipe,
   ],
   template: `
@@ -138,10 +140,17 @@ interface MrFormData {
             </div>
 
             <mat-accordion class="mt-16">
-              <mat-expansion-panel>
+              <mat-expansion-panel [disabled]="!canUseWebhooks()">
                 <mat-expansion-panel-header>
-                  <mat-panel-title>{{ 'mrNew.webhook' | translate }}</mat-panel-title>
-                  <mat-panel-description>{{ 'mrNew.registerWebhook' | translate }}</mat-panel-description>
+                  <mat-panel-title>
+                    {{ 'mrNew.webhook' | translate }}
+                    @if (!canUseWebhooks()) {
+                      <mat-icon class="lock-badge">lock</mat-icon>
+                    }
+                  </mat-panel-title>
+                  <mat-panel-description matTooltip="{{ !canUseWebhooks() ? ('plan.locked.webhooks' | translate) : '' }}">
+                    {{ 'mrNew.registerWebhook' | translate }}
+                  </mat-panel-description>
                 </mat-expansion-panel-header>
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>{{ 'mrNew.webhookUrl' | translate }}</mat-label>
@@ -213,8 +222,9 @@ interface MrFormData {
                     <mat-icon>content_copy</mat-icon> {{ 'mrNew.copyReport' | translate }}
                   </button>
                 }
-                <button mat-stroked-button (click)="saveAsTemplate()">
-                  <mat-icon>bookmark</mat-icon> {{ 'mrNew.saveTemplate' | translate }}
+                <button mat-stroked-button (click)="saveAsTemplate()" [disabled]="!canUseTemplates()"
+                  matTooltip="{{ canUseTemplates() ? '' : ('plan.locked.templates' | translate) }}">
+                  <mat-icon>{{ canUseTemplates() ? 'bookmark' : 'lock' }}</mat-icon> {{ 'mrNew.saveTemplate' | translate }}
                 </button>
                 <button mat-raised-button color="primary" (click)="reset()">
                   <mat-icon>refresh</mat-icon> {{ 'mrNew.createAnother' | translate }}
@@ -251,6 +261,7 @@ interface MrFormData {
     .chip { display: inline-block; padding: 4px 10px; border-radius: 16px; background: #e3f2fd; color: #1565c0; font-size: 12px; cursor: pointer; transition: background 0.2s; }
     .chip:hover { background: #bbdefb; }
     .mt-16 { margin-top: 16px; }
+    .lock-badge { font-size: 16px; height: 16px; width: 16px; margin-left: 6px; color: rgba(0,0,0,0.45); vertical-align: middle; }
   `,
 })
 export class MergeRequestNewComponent {
@@ -260,6 +271,10 @@ export class MergeRequestNewComponent {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private auth = inject(AuthService);
+
+  canUseTemplates = computed(() => this.auth.canUseFeature('templates'));
+  canUseWebhooks = computed(() => this.auth.canUseFeature('webhooks'));
 
   step = signal<'form' | 'progress'>('form');
   executing = signal(false);

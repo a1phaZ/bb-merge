@@ -72,6 +72,10 @@ export class AuthService {
     return this.http.get<UsageInfo>('/api/v1/auth/usage');
   }
 
+  canUseFeature(feature: 'templates' | 'webhooks'): boolean {
+    return this.user()?.plan !== 'free';
+  }
+
   logout() {
     this.user.set(null);
     this.token.set(null);

@@ -4,6 +4,7 @@ import { ProviderFactory } from '../providers/factory';
 import { getStorageProvider } from '../storage/factory';
 import { AppError } from '../middleware/error-handler';
 import { quotaMR } from '../middleware/quota';
+import { getPlanLimits } from '../plans';
 import { addProgressEvent, finishProgress, getOrCreateSession } from './progress';
 import { logger } from '../logger';
 import { validate, mergeRequestCreateSchema } from '../validation';
@@ -39,6 +40,10 @@ router.post('/', validate(mergeRequestCreateSchema), quotaMR, asyncHandler(async
 
   const sessionId = body.sessionId || uuid();
   const session = getOrCreateSession(sessionId);
+
+  if (body.webhookUrl && req.user && !getPlanLimits(req.user.plan).webhooks) {
+    throw new AppError(403, 'Webhook registration is available on Pro and higher plans.');
+  }
 
   const titlePrefix = body.titlePrefix || provider.defaultTitlePrefix || 'Merge';
   const description = body.description || `Auto-created merge request for ${body.project}/${body.repo}`;

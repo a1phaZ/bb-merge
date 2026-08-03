@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { planGuard } from './core/guards/plan.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -30,7 +31,7 @@ export const routes: Routes = [
 
   { path: 'templates',
     loadComponent: () => import('./pages/templates/templates.component').then(m => m.TemplatesComponent),
-    title: 'Templates', canActivate: [authGuard] },
+    title: 'Templates', canActivate: [authGuard, planGuard('templates')] },
 
   { path: 'browser',
     loadComponent: () => import('./pages/browser/browser.component').then(m => m.BrowserComponent),
@@ -38,7 +39,7 @@ export const routes: Routes = [
 
   { path: 'webhooks',
     loadComponent: () => import('./pages/webhooks/webhooks.component').then(m => m.WebhooksComponent),
-    title: 'Webhooks', canActivate: [authGuard] },
+    title: 'Webhooks', canActivate: [authGuard, planGuard('webhooks')] },
 
   { path: 'settings',
     loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent),
@@ -47,6 +48,10 @@ export const routes: Routes = [
   { path: 'account',
     loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),
     title: 'Account', canActivate: [authGuard] },
+
+  { path: 'pricing',
+    loadComponent: () => import('./pages/pricing/pricing.component').then(m => m.PricingComponent),
+    title: 'Plans', canActivate: [authGuard] },
 
   { path: 'logs',
     loadComponent: () => import('./pages/logs/logs.component').then(m => m.LogsComponent),

@@ -84,10 +84,14 @@ import { AuthService } from './core/services/auth.service';
               }
             </a>
             <a mat-list-item routerLink="/templates" routerLinkActive="active-link"
-              matTooltip="{{ !drawerExpanded() ? ('nav.templates' | translate) : '' }}">
-              <mat-icon matListItemIcon>description</mat-icon>
+              matTooltip="{{ !drawerExpanded() ? ('nav.templates' | translate) : '' }}"
+              (click)="onNavLocked($event, 'templates')">
+              <mat-icon matListItemIcon>{{ auth.canUseFeature('templates') ? 'description' : 'lock' }}</mat-icon>
               @if (drawerExpanded()) {
                 <span matListItemTitle>{{ 'nav.templates' | translate }}</span>
+              }
+              @if (!auth.canUseFeature('templates')) {
+                <mat-icon matListItemIcon class="lock-badge">lock</mat-icon>
               }
             </a>
             <a mat-list-item routerLink="/browser" routerLinkActive="active-link"
@@ -98,10 +102,14 @@ import { AuthService } from './core/services/auth.service';
               }
             </a>
             <a mat-list-item routerLink="/webhooks" routerLinkActive="active-link"
-              matTooltip="{{ !drawerExpanded() ? ('nav.webhooks' | translate) : '' }}">
-              <mat-icon matListItemIcon>webhook</mat-icon>
+              matTooltip="{{ !drawerExpanded() ? ('nav.webhooks' | translate) : '' }}"
+              (click)="onNavLocked($event, 'webhooks')">
+              <mat-icon matListItemIcon>{{ auth.canUseFeature('webhooks') ? 'webhook' : 'lock' }}</mat-icon>
               @if (drawerExpanded()) {
                 <span matListItemTitle>{{ 'nav.webhooks' | translate }}</span>
+              }
+              @if (!auth.canUseFeature('webhooks')) {
+                <mat-icon matListItemIcon class="lock-badge">lock</mat-icon>
               }
             </a>
             <a mat-list-item routerLink="/logs" routerLinkActive="active-link"
@@ -166,6 +174,7 @@ import { AuthService } from './core/services/auth.service';
     .active-link { background: rgba(63, 81, 181, 0.12); }
     .active-link .mat-icon { color: #3f51b5; }
     .plan-badge { margin-right: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; }
+    .lock-badge { margin-left: auto; font-size: 16px; color: rgba(0,0,0,0.4); }
   `,
 })
 export class AppComponent {
@@ -189,5 +198,11 @@ export class AppComponent {
   logout() {
     this.auth.logout();
     this.router.navigateByUrl('/login');
+  }
+
+  onNavLocked(event: Event, feature: 'templates' | 'webhooks') {
+    if (this.auth.canUseFeature(feature)) return;
+    event.preventDefault();
+    this.router.navigateByUrl('/pricing');
   }
 }

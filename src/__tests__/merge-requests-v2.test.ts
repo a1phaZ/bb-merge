@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+import { errorHandler } from '../middleware/error-handler';
 
 const mockProgressEvents: any[] = [];
 let mockFinished = false;
+
+let currentPlan = 'self-hosted';
 
 const mockStorage = {
   getProvider: vi.fn(),
@@ -55,10 +58,11 @@ beforeAll(async () => {
   app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
-    req.user = { userId: 'u1', email: 'test@example.com', role: 'operator', plan: 'self-hosted' };
+    req.user = { userId: 'u1', email: 'test@example.com', role: 'operator', plan: currentPlan };
     next();
   });
   app.use('/api/v1/merge-requests', router);
+  app.use(errorHandler);
 });
 
 const validBody = {
@@ -73,6 +77,7 @@ describe('POST /api/v1/merge-requests (v2)', () => {
   beforeEach(() => {
     mockProgressEvents.length = 0;
     mockFinished = false;
+    currentPlan = 'self-hosted';
     Object.keys(mockProviders).forEach(k => delete mockProviders[k]);
     mockStorage.getProvider.mockReset();
     mockStorage.saveHistory.mockReset();
@@ -208,6 +213,22 @@ describe('POST /api/v1/merge-requests (v2)', () => {
     await flushAsync();
 
     expect(mockProgressEvents.some((e: any) => e.message.includes('Webhook registration failed'))).toBe(true);
+  });
+
+  it('rejects webhook registration on free plan with 403', async () => {
+    currentPlan = 'free';
+    mockStorage.getProvider.mockResolvedValue({ id: 'p1', type: 'bitbucket', token: 'tok' });
+    const { ProviderFactory } = await import('../providers/factory');
+    (ProviderFactory.create as any).mockReturnValue(createMockClient());
+
+    const res = await request(app).post('/api/v1/merge-requests').send({
+      ...validBody,
+      webhookUrl: 'https://hooks.example.com/hook',
+      webhookEvents: ['pr:merged'],
+    });
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe('Webhook registration is available on Pro and higher plans.');
+    expect(mockStorage.saveHistory).not.toHaveBeenCalled();
   });
 
   it('handles auto-merge when autoMerge=true and no conflicts', async () => {
