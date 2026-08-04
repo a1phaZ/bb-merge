@@ -178,7 +178,7 @@ describe('GET /api/v1/auth/usage', () => {
     mockState.usageCount = 0;
   });
 
-  it('returns plan, limits and reset date for free plan', { timeout: 20000 }, async () => {
+  it('returns plan, limits and reset date for free plan', async () => {
     mockState.usageCount = 1;
     mockState.providers = [{ id: 'p1' }];
     const { default: authRouter } = await import('../routes/auth');

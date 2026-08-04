@@ -3,17 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
 
-export interface SubscriptionInfo {
-  plan: 'pro' | 'business';
-  status: 'active' | 'past_due' | 'canceled';
-  provider: 'yookassa';
-  paymentMethodId?: string;
-  currentPeriodEnd: string;
-  canceledAt?: string;
-  lastPaymentId?: string;
-  retryCount?: number;
-}
-
 export interface AuthUser {
   id: string;
   email: string;
@@ -21,17 +10,11 @@ export interface AuthUser {
   role: string;
   plan: string;
   createdAt?: string;
-  subscription?: SubscriptionInfo | null;
 }
 
 export interface AuthResponse {
   token: string;
   user: AuthUser;
-}
-
-export interface CheckoutResponse {
-  confirmationUrl: string;
-  paymentId: string;
 }
 
 export interface UsageInfo {
@@ -55,7 +38,6 @@ export class AuthService {
   user = signal<AuthUser | null>(null);
   isAuthenticated = computed(() => this.user() !== null);
   token = signal<string | null>(null);
-  subscription = computed<SubscriptionInfo | null>(() => this.user()?.subscription ?? null);
 
   constructor() {
     const saved = localStorage.getItem('mr_auth');
@@ -88,25 +70,6 @@ export class AuthService {
 
   getUsage() {
     return this.http.get<UsageInfo>('/api/v1/auth/usage');
-  }
-
-  startCheckout(plan: 'pro' | 'business') {
-    return this.http.post<CheckoutResponse>('/api/billing/checkout', { plan });
-  }
-
-  confirmPayment(paymentId: string) {
-    return this.http.get<AuthResponse>('/api/billing/confirm', { params: { paymentId } }).pipe(
-      tap(res => this.setSession(res)),
-    );
-  }
-
-  cancelSubscription() {
-    return this.http.post<{ subscription: SubscriptionInfo }>('/api/billing/cancel', null).pipe(
-      tap(res => {
-        this.user.update(u => (u ? { ...u, subscription: res.subscription } : u));
-        localStorage.setItem('mr_auth', JSON.stringify({ token: this.token(), user: this.user() }));
-      }),
-    );
   }
 
   canUseFeature(feature: 'templates' | 'webhooks'): boolean {

@@ -11,10 +11,6 @@ const envSchema = z.object({
   ENCRYPTION_KEY: z.string().optional(),
   JWT_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
-  YOOKASSA_SHOP_ID: z.string().optional(),
-  YOOKASSA_SECRET_KEY: z.string().optional(),
-  YOOKASSA_SANDBOX: z.coerce.boolean().default(true),
-  YOOKASSA_RETURN_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

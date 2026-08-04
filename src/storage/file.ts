@@ -242,10 +242,6 @@ export class FileStorageProvider implements StorageProvider {
     return users.find(u => u.id === id) || null;
   }
 
-  async getUsers(): Promise<User[]> {
-    return readJSON<User>('users');
-  }
-
   async saveUser(user: User): Promise<void> {
     const users = readJSON<User>('users');
     const existingIndex = users.findIndex(u => u.id === user.id);
